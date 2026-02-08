@@ -1,0 +1,98 @@
+[
+  {
+    "ruleId": "RULE-001",
+    "name": "All orgs get baseline governance controls",
+    "description": "Every organization regardless of risk tier requires foundational governance controls.",
+    "priority": 10,
+    "conditions": { "all": [{ "field": "riskTier", "operator": "in", "value": ["LOW","MEDIUM","HIGH","REGULATED"] }] },
+    "actions": { "selectControls": ["CTL-GOV-001","CTL-GOV-002","CTL-GOV-004","CTL-GOV-007","CTL-GOV-009"], "designation": "REQUIRED", "explanation": "Baseline governance controls are required for all organizations using AI." }
+  },
+  {
+    "ruleId": "RULE-002",
+    "name": "PII handling requires data controls",
+    "description": "Organizations processing PII must implement data handling and provenance controls.",
+    "priority": 20,
+    "conditions": { "all": [{ "field": "dataPosture.pii", "operator": "eq", "value": true }] },
+    "actions": { "selectControls": ["CTL-MAN-004","CTL-MAP-003","CTL-MAN-008"], "designation": "REQUIRED", "explanation": "PII processing requires data handling controls, provenance documentation, and audit trails." }
+  },
+  {
+    "ruleId": "RULE-003",
+    "name": "High/Regulated tier requires enhanced monitoring",
+    "description": "High and regulated risk tiers require drift detection, monitoring, red-teaming, and incident response.",
+    "priority": 15,
+    "conditions": { "all": [{ "field": "riskTier", "operator": "in", "value": ["HIGH","REGULATED"] }] },
+    "actions": { "selectControls": ["CTL-MEA-003","CTL-MAN-006","CTL-MEA-004","CTL-GOV-006"], "designation": "REQUIRED", "explanation": "High/Regulated risk tiers require enhanced monitoring, adversarial testing, and incident response capabilities." }
+  },
+  {
+    "ruleId": "RULE-004",
+    "name": "Automated decisions require human oversight + bias assessment",
+    "description": "Organizations using AI for automated decisions must implement human oversight and bias impact assessment.",
+    "priority": 20,
+    "conditions": { "all": [{ "field": "aiUsage", "operator": "contains", "value": "automated_decisions" }] },
+    "actions": { "selectControls": ["CTL-GOV-008","CTL-MAP-004","CTL-MAP-002"], "designation": "REQUIRED", "explanation": "Automated decision-making requires human-in-the-loop oversight and bias impact assessment per NIST GOVERN-3.2 and MAP-2.2." }
+  },
+  {
+    "ruleId": "RULE-005",
+    "name": "Customer-facing AI requires output filtering",
+    "description": "Customer-facing AI systems must implement prompt injection guardrails, output filtering, and performance metrics.",
+    "priority": 25,
+    "conditions": { "all": [{ "field": "aiUsage", "operator": "contains", "value": "customer_facing" }] },
+    "actions": { "selectControls": ["CTL-MAN-003","CTL-MAN-002","CTL-MEA-001"], "designation": "REQUIRED", "explanation": "Customer-facing AI requires output filtering, prompt injection guardrails, and performance monitoring." }
+  },
+  {
+    "ruleId": "RULE-006",
+    "name": "Third-party vendors require due diligence + evaluation",
+    "description": "Organizations using third-party AI components must perform vendor due diligence and model evaluation.",
+    "priority": 30,
+    "conditions": { "all": [{ "field": "vendorPosture.thirdPartyComponents", "operator": "eq", "value": true }] },
+    "actions": { "selectControls": ["CTL-GOV-005","CTL-MEA-007"], "designation": "REQUIRED", "explanation": "Third-party AI components require vendor due diligence and independent model evaluation per NIST GOVERN-6.1." }
+  },
+  {
+    "ruleId": "RULE-007",
+    "name": "Enterprise maturity gets full governance suite",
+    "description": "Enterprise-scale AI deployments should implement ethics board, decommissioning policy, and rollback procedures.",
+    "priority": 50,
+    "conditions": { "all": [{ "field": "aiMaturity", "operator": "eq", "value": "enterprise" }] },
+    "actions": { "selectControls": ["CTL-GOV-003","CTL-GOV-010","CTL-MAN-005"], "designation": "RECOMMENDED", "explanation": "Enterprise-scale AI deployment benefits from an ethics board, decommissioning policy, and model rollback procedures." }
+  },
+  {
+    "ruleId": "RULE-008",
+    "name": "PHI requires enhanced privacy controls",
+    "description": "Organizations processing PHI must implement enhanced privacy, regulatory mapping, and performance controls.",
+    "priority": 15,
+    "conditions": { "all": [{ "field": "dataPosture.phi", "operator": "eq", "value": true }] },
+    "actions": { "selectControls": ["CTL-MAN-004","CTL-MAP-005","CTL-MAN-008","CTL-MEA-001"], "designation": "REQUIRED", "explanation": "PHI processing triggers HIPAA requirements and mandates enhanced privacy controls and regulatory mapping." }
+  },
+  {
+    "ruleId": "RULE-009",
+    "name": "Medium tier gets recommended monitoring",
+    "description": "Medium risk tier organizations should implement drift detection and continuous monitoring.",
+    "priority": 40,
+    "conditions": { "all": [{ "field": "riskTier", "operator": "eq", "value": "MEDIUM" }] },
+    "actions": { "selectControls": ["CTL-MEA-003","CTL-MAN-006"], "designation": "RECOMMENDED", "explanation": "Medium risk tier benefits from drift detection and continuous monitoring capabilities." }
+  },
+  {
+    "ruleId": "RULE-010",
+    "name": "Children data triggers high-stakes controls",
+    "description": "Processing children's data requires human oversight, bias assessment, and fairness metrics.",
+    "priority": 10,
+    "conditions": { "all": [{ "field": "dataPosture.children", "operator": "eq", "value": true }] },
+    "actions": { "selectControls": ["CTL-GOV-008","CTL-MAP-004","CTL-MAP-002","CTL-MEA-002"], "designation": "REQUIRED", "explanation": "Children's data processing requires the highest level of oversight, bias assessment, and fairness controls per COPPA and ethical obligations." }
+  },
+  {
+    "ruleId": "RULE-011",
+    "name": "EU jurisdictions require GDPR transparency rights section",
+    "description": "EU jurisdiction triggers GDPR-specific transparency and regulatory controls.",
+    "priority": 20,
+    "conditions": { "any": [{ "field": "jurisdictions", "operator": "contains", "value": "EU" }, { "field": "jurisdictions", "operator": "contains", "value": "Germany" }, { "field": "jurisdictions", "operator": "contains", "value": "France" }] },
+    "actions": { "selectControls": ["CTL-MAP-005"], "designation": "REQUIRED", "policyFlags": ["include_gdpr_rights"], "explanation": "EU jurisdiction requires GDPR compliance and transparency rights documentation." }
+  },
+  {
+    "ruleId": "RULE-012",
+    "name": "US jurisdictions require CCPA transparency rights section",
+    "description": "US jurisdiction triggers CCPA-specific transparency and privacy controls.",
+    "priority": 25,
+    "conditions": { "any": [{ "field": "jurisdictions", "operator": "contains", "value": "US" }, { "field": "jurisdictions", "operator": "contains", "value": "United States" }] },
+    "actions": { "selectControls": ["CTL-MAP-005"], "designation": "RECOMMENDED", "policyFlags": ["include_ccpa_rights"], "explanation": "US jurisdiction benefits from CCPA transparency rights documentation." }
+  }
+]

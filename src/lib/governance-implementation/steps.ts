@@ -1,0 +1,58 @@
+export const implementationSteps = [
+  {
+    id: 1,
+    key: "threeLoD",
+    title: "Three Lines of Defense",
+    description: "Assign real people to each line of defense in your organization",
+    nistMapping: "GOVERN 1.2, GOVERN 1.4",
+  },
+  {
+    id: 2,
+    key: "roles",
+    title: "Governance Roles",
+    description: "Assign people to each governance role identified for your organization",
+    nistMapping: "GOVERN 1.4, GOVERN 3.1",
+  },
+  {
+    id: 3,
+    key: "committees",
+    title: "Committees",
+    description: "Confirm committee structure, assign members, and set meeting schedules",
+    nistMapping: "GOVERN 1.2, GOVERN 2.1",
+  },
+  {
+    id: 4,
+    key: "decisionRights",
+    title: "Decision Rights (RACI)",
+    description: "Assign real names to each RACI role for key governance decisions",
+    nistMapping: "GOVERN 1.3, GOVERN 3.2",
+  },
+  {
+    id: 5,
+    key: "reviewCadence",
+    title: "Review Cadence",
+    description: "Confirm your governance review schedule and set the first review date",
+    nistMapping: "GOVERN 1.5, MEASURE 1.1",
+  },
+  {
+    id: 6,
+    key: "humanAiPatterns",
+    title: "Human-AI Oversight Patterns",
+    description: "Confirm which oversight patterns apply and add implementation notes",
+    nistMapping: "GOVERN 3.2, MAP 2.2",
+  },
+  {
+    id: 7,
+    key: "whistleblower",
+    title: "Whistleblower Mechanism",
+    description: "Configure your incident reporting channel and assign the process owner",
+    nistMapping: "GOVERN 4.2, GOVERN 5.1",
+  },
+  {
+    id: 8,
+    key: "escalation",
+    title: "Escalation Matrix",
+    description: "Assign real people to each escalation level and confirm response timelines",
+    nistMapping: "MANAGE 3.1, MANAGE 4.1",
+  },
+];

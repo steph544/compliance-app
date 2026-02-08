@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// === NIST Reference Data (seeded, read-only) ===
+
+model NistFunction {
+  id          String         @id // "GOVERN", "MAP", "MEASURE", "MANAGE"
+  name        String
+  description String
+  sortOrder   Int            @default(0)
+  categories  NistCategory[]
+}
+
+model NistCategory {
+  id            String            @id // "GOVERN-1", "MAP-2", etc.
+  name          String
+  description   String
+  functionId    String
+  function      NistFunction      @relation(fields: [functionId], references: [id])
+  subcategories NistSubcategory[]
+}
+
+model NistSubcategory {
+  id          String       @id // "GOVERN-1.1", "MAP-2.3", etc.
+  description String
+  categoryId  String
+  category    NistCategory @relation(fields: [categoryId], references: [id])
+  controls    Control[]    @relation("ControlNistRefs")
+}
+
+// === Control Library (seeded, admin-editable later) ===
+
+model Control {
+  id                  String            @id @default(cuid())
+  controlId           String            @unique // "CTL-GOV-001"
+  name                String
+  description         String
+  type                ControlType
+  scope               ControlScope
+  riskTags            String[]
+  nistRefs            NistSubcategory[] @relation("ControlNistRefs")
+  applicabilityTags   Json?             // { industries: [], jurisdictions: [], domains: [] }
+  implementationLevel ImplLevel
+  implementationSteps String[]
+  monitoringMetrics   Json?             // { metrics: [], alerts: [] }
+  evidenceArtifacts   String[]
+  vendorGuidance      Json?             // { aws: {}, azure: {}, openai: {}, generic: {} }
+  rules               Rule[]            @relation("RuleControls")
+}
+
+enum ControlType {
+  TECHNICAL
+  PROCESS
+  LEGAL
+}
+
+enum ControlScope {
+  ORG
+  PRODUCT
+  BOTH
+}
+
+enum ImplLevel {
+  BASELINE
+  ENHANCED
+  HIGH_STAKES
+}
+
+// === Rules Engine Config (seeded, JSON-editable) ===
+
+model Rule {
+  id          String    @id @default(cuid())
+  ruleId      String    @unique // "RULE-001"
+  name        String
+  description String
+  priority    Int       @default(100)
+  conditions  Json
+  actions     Json
+  controls    Control[] @relation("RuleControls")
+  enabled     Boolean   @default(true)
+}
+
+// === Organization Assessment (parent) ===
+
+model OrgAssessment {
+  id        String               @id @default(cuid())
+  userId    String
+  orgName   String
+  status    AssessmentStatus     @default(IN_PROGRESS)
+  answers   Json                 @default("{}")
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  result    OrgAssessmentResult?
+  aiSystems AISystem[]
+  products  ProductAssessment[]
+
+  @@index([userId])
+}
+
+model OrgAssessmentResult {
+  id                  String        @id @default(cuid())
+  assessmentId        String        @unique
+  assessment          OrgAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  riskTier            RiskTier
+  riskScore           Int
+  riskDrivers         Json          // [{ factor, score, explanation }]
+  readinessHeatmap    Json          // { governance: 1-4, data: 1-4, technology: 1-4, people: 1-4, riskCompliance: 1-4, recommendations: {} }
+  governanceBlueprint Json          // { threeLoD, roles, committees, decisionRights, cadence, humanAiPatterns, whistleblower, escalation }
+  nistMapping         Json          // [{ finding, nistRef, controls, evidence }]
+  controlSelections   Json          // [{ controlId, designation, owner, reasoning }]
+  monitoringPlan      Json          // { metrics, cadence, alerts }
+  operationsRunbook   Json          // { alerts, incidentTriage, escalationTriggers, roles, timelines }
+  policyDrafts        Json          // { responsibleAI, transparency }
+  nistProgress        Json          @default("{}") // { implementedControlIds: string[], controlNotes: Record<string, string> }
+  computedAt          DateTime      @default(now())
+  implementation      GovernanceImplementation?
+}
+
+// === Governance Implementation (interactive walkthrough) ===
+
+model GovernanceImplementation {
+  id          String               @id @default(cuid())
+  resultId    String               @unique
+  result      OrgAssessmentResult  @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  status      ImplementationStatus @default(NOT_STARTED)
+  currentStep Int                  @default(1)
+  sections    Json                 @default("[]")
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+enum ImplementationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// === Product Assessment (child of org) ===
+
+model ProductAssessment {
+  id              String                  @id @default(cuid())
+  orgAssessmentId String
+  orgAssessment   OrgAssessment           @relation(fields: [orgAssessmentId], references: [id], onDelete: Cascade)
+  userId          String
+  projectName     String
+  status          AssessmentStatus        @default(IN_PROGRESS)
+  answers         Json                    @default("{}")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  result          ProductAssessmentResult?
+
+  @@index([orgAssessmentId])
+  @@index([userId])
+}
+
+model ProductAssessmentResult {
+  id                     String            @id @default(cuid())
+  assessmentId           String            @unique
+  assessment             ProductAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  riskTier               RiskTier
+  riskScore              Int
+  riskDrivers            Json
+  fitForAiResult         Json              // { validated, concerns[], recommendation }
+  stakeholderMap         Json              // { upstream[], downstream[], inclusionConcerns[] }
+  releaseCriteriaMatrix  Json              // [{ metric, type, threshold, dataSource, owner, authority }]
+  technicalControls      Json              // [{ controlId, designation, implementationGuide, owner }]
+  complianceRequirements Json              // [{ regulation, requirements[], applicability }]
+  nistMapping            Json
+  implementationChecklist Json             // [{ phase, tasks[], status }]
+  serviceCard            Json              // { purpose, model, data, limitations, prohibitedUses, oversight, monitoring }
+  monitoringSpec         Json              // { metrics, thresholds, alerts, dashboardSpec, environmentalTracking }
+  computedAt             DateTime          @default(now())
+}
+
+// === AI System Registry ===
+
+model AISystem {
+  id              String        @id @default(cuid())
+  assessmentId    String
+  assessment      OrgAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  // Identity
+  name            String
+  description     String
+  vendor          String?
+  vendorType      VendorType
+
+  // Classification
+  aiType          String[]
+  purpose         SystemPurpose
+  department      String
+  businessOwner   String
+  technicalOwner  String?
+
+  // Risk Profile
+  dataTypes              String[]
+  hasAutomatedDecisions  Boolean       @default(false)
+  affectsExternalUsers   Boolean       @default(false)
+  riskTier               RiskTier?
+  riskNotes              String?
+
+  // Model Details
+  modelType       String?
+  modelVersion    String?
+  modelProvider   String?
+  trainingDate    DateTime?
+  dataResidency   String[]
+
+  // Deployment
+  status          SystemStatus  @default(PLANNED)
+  deploymentType  String?
+  goLiveDate      DateTime?
+  lastReviewDate  DateTime?
+  nextReviewDate  DateTime?
+
+  // Governance
+  hasDocumentation    Boolean   @default(false)
+  hasImpactAssessment Boolean   @default(false)
+  hasMonitoring       Boolean   @default(false)
+  hasIncidentPlan     Boolean   @default(false)
+  applicableLaws      String[]
+  prohibitedUses      String?
+  driftThresholds     Json?
+  complianceNotes     String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([assessmentId])
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RiskTier {
+  LOW
+  MEDIUM
+  HIGH
+  REGULATED
+}
+
+enum VendorType {
+  INTERNAL
+  THIRD_PARTY
+  HYBRID
+}
+
+enum SystemPurpose {
+  DECISION_SUPPORT
+  AUTOMATION
+  ANALYTICS
+  CUSTOMER_FACING
+  INTERNAL_TOOL
+}
+
+enum SystemStatus {
+  PLANNED
+  PILOT
+  PRODUCTION
+  DECOMMISSIONING
+  DECOMMISSIONED
+}

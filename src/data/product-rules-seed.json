@@ -1,0 +1,98 @@
+[
+  {
+    "ruleId": "RULE-P001",
+    "name": "All products get baseline technical controls",
+    "description": "Every AI product requires foundational documentation, monitoring, access control, and audit logging.",
+    "priority": 10,
+    "conditions": { "all": [{ "field": "riskTier", "operator": "in", "value": ["LOW","MEDIUM","HIGH","REGULATED"] }] },
+    "actions": { "selectControls": ["CTL-PROD-006","CTL-PROD-007","CTL-PROD-009","CTL-PROD-010","CTL-PROD-012","CTL-PROD-013"], "designation": "REQUIRED", "explanation": "All AI products require baseline documentation, monitoring, access control, and audit trail." }
+  },
+  {
+    "ruleId": "RULE-P002",
+    "name": "Generative AI requires prompt injection + output filtering",
+    "description": "Generative AI systems must implement input validation, prompt injection defense, output filtering, and toxicity filters.",
+    "priority": 15,
+    "conditions": { "all": [{ "field": "aiType", "operator": "contains", "value": "generative" }] },
+    "actions": { "selectControls": ["CTL-PROD-001","CTL-PROD-002","CTL-PROD-003","CTL-PROD-019"], "designation": "REQUIRED", "explanation": "Generative AI requires prompt injection defense, output filtering, and toxicity prevention controls." }
+  },
+  {
+    "ruleId": "RULE-P003",
+    "name": "Customer/public-facing AI requires content safety + rate limiting",
+    "description": "External-facing AI must implement content safety, rate limiting, toxicity filtering, and consent mechanisms.",
+    "priority": 20,
+    "conditions": { "any": [{ "field": "endUsers", "operator": "eq", "value": "customers" }, { "field": "endUsers", "operator": "eq", "value": "public" }] },
+    "actions": { "selectControls": ["CTL-PROD-003","CTL-PROD-014","CTL-PROD-019","CTL-PROD-017"], "designation": "REQUIRED", "explanation": "External-facing AI requires content safety, rate limiting, and consent/opt-out mechanisms." }
+  },
+  {
+    "ruleId": "RULE-P004",
+    "name": "Automated decisions require human-in-the-loop + explainability",
+    "description": "Systems that can deny services require human checkpoints, explainability, and bias testing.",
+    "priority": 10,
+    "conditions": { "all": [{ "field": "canDenyServices", "operator": "eq", "value": true }] },
+    "actions": { "selectControls": ["CTL-PROD-008","CTL-PROD-018","CTL-PROD-005"], "designation": "REQUIRED", "explanation": "Systems that can deny services or opportunities require human-in-the-loop checkpoints, explainability interface, and bias testing." }
+  },
+  {
+    "ruleId": "RULE-P005",
+    "name": "PII processing requires detection + redaction pipeline",
+    "description": "Products processing PII or PHI must implement PII detection/redaction and consent mechanisms.",
+    "priority": 15,
+    "conditions": { "any": [{ "field": "dataTypes", "operator": "contains", "value": "PII" }, { "field": "dataTypes", "operator": "contains", "value": "PHI" }] },
+    "actions": { "selectControls": ["CTL-PROD-011","CTL-PROD-017"], "designation": "REQUIRED", "explanation": "Products processing personal or health information require PII detection/redaction pipeline and consent mechanisms." }
+  },
+  {
+    "ruleId": "RULE-P006",
+    "name": "High/Regulated products require rollback + canary deployment",
+    "description": "High-risk products require version control, rollback, canary deployment, fallback, and bias testing.",
+    "priority": 15,
+    "conditions": { "all": [{ "field": "riskTier", "operator": "in", "value": ["HIGH","REGULATED"] }] },
+    "actions": { "selectControls": ["CTL-PROD-020","CTL-PROD-016","CTL-PROD-015","CTL-PROD-005"], "designation": "REQUIRED", "explanation": "High/Regulated risk products require model rollback capability, canary deployment, graceful degradation, and bias testing." }
+  },
+  {
+    "ruleId": "RULE-P007",
+    "name": "High hallucination risk requires RAG guardrails + output filtering",
+    "description": "Products with medium/high hallucination risk need RAG guardrails and output filtering.",
+    "priority": 20,
+    "conditions": { "all": [{ "field": "hallucinationRisk", "operator": "in", "value": ["medium","high"] }] },
+    "actions": { "selectControls": ["CTL-PROD-004","CTL-PROD-003"], "designation": "REQUIRED", "explanation": "Medium/high hallucination risk requires RAG retrieval guardrails and output filtering to prevent factual errors." }
+  },
+  {
+    "ruleId": "RULE-P008",
+    "name": "Prompt injection exposure requires defense layer + input validation",
+    "description": "Products exposed to prompt injection need defense layer, input validation, and rate limiting.",
+    "priority": 15,
+    "conditions": { "all": [{ "field": "promptInjectionExposure", "operator": "eq", "value": true }] },
+    "actions": { "selectControls": ["CTL-PROD-001","CTL-PROD-002","CTL-PROD-014"], "designation": "REQUIRED", "explanation": "Prompt injection exposure requires dedicated defense layer, input validation, and rate limiting." }
+  },
+  {
+    "ruleId": "RULE-P009",
+    "name": "Human-in-the-loop declared requires checkpoint controls",
+    "description": "Products with human-in-the-loop configuration must implement checkpoint controls.",
+    "priority": 25,
+    "conditions": { "all": [{ "field": "humanAIConfig", "operator": "eq", "value": "in_the_loop" }] },
+    "actions": { "selectControls": ["CTL-PROD-008"], "designation": "REQUIRED", "explanation": "Human-in-the-loop configuration requires formal checkpoint controls to ensure human review before action." }
+  },
+  {
+    "ruleId": "RULE-P010",
+    "name": "Critical impact severity requires full safety suite",
+    "description": "Critical impact products require human checkpoints, explainability, bias testing, fallback, and rollback.",
+    "priority": 5,
+    "conditions": { "all": [{ "field": "impactSeverity", "operator": "eq", "value": "critical" }] },
+    "actions": { "selectControls": ["CTL-PROD-008","CTL-PROD-018","CTL-PROD-005","CTL-PROD-015","CTL-PROD-020"], "designation": "REQUIRED", "explanation": "Critical impact severity requires the full safety suite: human-in-the-loop, explainability, bias testing, fallback, and rollback." }
+  },
+  {
+    "ruleId": "RULE-P011",
+    "name": "Bias risk categories trigger bias testing harness",
+    "description": "Products with identified bias risk categories must implement bias testing and explainability.",
+    "priority": 20,
+    "conditions": { "all": [{ "field": "biasRiskCategories", "operator": "exists", "value": true }] },
+    "actions": { "selectControls": ["CTL-PROD-005","CTL-PROD-018"], "designation": "REQUIRED", "explanation": "Identified bias risk categories require a bias testing harness and explainability interface." }
+  },
+  {
+    "ruleId": "RULE-P012",
+    "name": "Production stage requires monitoring + fallback",
+    "description": "Products in production must have monitoring, performance tracking, fallback, and rollback capabilities.",
+    "priority": 20,
+    "conditions": { "all": [{ "field": "projectStage", "operator": "eq", "value": "production" }] },
+    "actions": { "selectControls": ["CTL-PROD-009","CTL-PROD-010","CTL-PROD-015","CTL-PROD-020"], "designation": "REQUIRED", "explanation": "Production-deployed systems require active monitoring, performance tracking, fallback mechanisms, and rollback capability." }
+  }
+]
