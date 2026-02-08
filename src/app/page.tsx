@@ -1,9 +1,3 @@
-<<<<<<< Updated upstream
-import { redirect } from "next/navigation";
-
-export default function Home() {
-  redirect("/dashboard");
-=======
 "use client";
 
 import { useData } from "@/context/DataContext";
@@ -11,7 +5,7 @@ import { AppLink } from "./components/AppLink";
 import Link from "next/link";
 
 export default function HomePage() {
-  const { data } = useData();
+  const { data, organizationsLoadError, refresh } = useData();
   const orgs = data.organizations;
 
   return (
@@ -36,7 +30,18 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {orgs.length === 0 ? (
+      {organizationsLoadError ? (
+        <div className="rounded-xl border border-border bg-muted/50 p-6 text-center">
+          <p className="font-medium text-foreground">{organizationsLoadError}</p>
+          <button
+            type="button"
+            onClick={() => refresh()}
+            className="mt-3 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            Retry
+          </button>
+        </div>
+      ) : orgs.length === 0 ? (
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-8 text-center text-zinc-500">
           <p>No organizations yet.</p>
           <p className="mt-2">
@@ -45,6 +50,7 @@ export default function HomePage() {
           </p>
         </div>
       ) : (
+        <>
         <ul className="space-y-2">
           {orgs.map((org) => (
             <li key={org.id}>
@@ -60,8 +66,8 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
+        </>
       )}
     </div>
   );
->>>>>>> Stashed changes
 }

@@ -12,8 +12,22 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const INTERDISCIPLINARY_OPTIONS = [
+  { value: "none", label: "No" },
+  { value: "partial", label: "Partial — some teams or efforts" },
+  { value: "yes", label: "Yes — interdisciplinary teams in place or planned" },
+] as const;
 
 const GOVERNANCE_FIELDS = [
   {
@@ -55,6 +69,7 @@ export default function Step8ExistingGovernance() {
       modelInventory: existingAnswers.modelInventory ?? false,
       incidentResponse: existingAnswers.incidentResponse ?? false,
       sdlcControls: existingAnswers.sdlcControls ?? false,
+      interdisciplinaryTeams: existingAnswers.interdisciplinaryTeams ?? undefined,
     },
   });
 
@@ -75,6 +90,34 @@ export default function Step8ExistingGovernance() {
             has in place.
           </p>
         </div>
+
+        <FormField
+          control={form.control}
+          name="interdisciplinaryTeams"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Interdisciplinary teams for AI design and risk management (optional)</FormLabel>
+              <FormDescription>
+                NIST MAP 1.2: Teams with demographic diversity and broad domain expertise improve context mapping and risk management.
+              </FormDescription>
+              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v === "" ? undefined : v)}>
+                <FormControl>
+                  <SelectTrigger className="w-full max-w-sm">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {INTERDISCIPLINARY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid gap-4">
           {GOVERNANCE_FIELDS.map((govField) => (

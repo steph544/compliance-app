@@ -12,6 +12,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -44,15 +45,22 @@ export default function Step6AIUsage() {
   return (
     <Form {...form}>
       <form className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          How you use AI influences risk tier, control selection, and governance focus.
+        </p>
+        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
+            AI Usage Types
+          </h3>
         <FormField
           control={form.control}
           name="aiUsage"
           render={() => (
             <FormItem>
               <FormLabel>AI Usage Types</FormLabel>
-              <p className="text-sm text-muted-foreground">
-                Select all the ways your organization uses or plans to use AI.
-              </p>
+              <FormDescription>
+                Select all the ways your organization uses or plans to use AI. Informs risk scoring and NIST-aligned controls.
+              </FormDescription>
               <div className="grid gap-4 mt-2">
                 {AI_USAGE_OPTIONS.map((option) => (
                   <FormField
@@ -86,6 +94,7 @@ export default function Step6AIUsage() {
             </FormItem>
           )}
         />
+        </section>
       </form>
     </Form>
   );

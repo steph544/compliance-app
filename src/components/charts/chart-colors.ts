@@ -10,20 +10,20 @@ export function getCSSVar(name: string): string {
 export const RISK_TIER_COLORS: Record<string, string> = {
   LOW: "#22c55e",
   MEDIUM: "#eab308",
-  HIGH: "#f97316",
-  REGULATED: "#a855f7",
+  HIGH: "#ea580c",
+  REGULATED: "#475569",
 };
 
 export const DESIGNATION_COLORS: Record<string, string> = {
-  REQUIRED: "#ef4444",
-  RECOMMENDED: "#f59e0b",
-  OPTIONAL: "#9ca3af",
+  REQUIRED: "#334155",
+  RECOMMENDED: "#64748b",
+  OPTIONAL: "#94a3b8",
 };
 
 export const CHART_COLORS = [
-  "#6366f1", // indigo
-  "#06b6d4", // cyan
-  "#f59e0b", // amber
-  "#ef4444", // red
-  "#8b5cf6", // violet
+  "#2563eb",
+  "#475569",
+  "#64748b",
+  "#0f172a",
+  "#1e293b",
 ];

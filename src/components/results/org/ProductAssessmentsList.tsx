@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import { RiskTierBadge } from "@/components/results/shared/RiskTierBadge";
+import { Card, CardContent } from "@/components/ui/card";
+import { StatusIndicator } from "@/components/ui/status-indicator";
+import { Pencil } from "lucide-react";
 
 interface ProductAssessment {
   id: string;
@@ -20,21 +17,6 @@ interface ProductAssessmentsListProps {
   products: ProductAssessment[];
   orgId: string;
 }
-
-const statusConfig: Record<string, { label: string; className: string }> = {
-  DRAFT: {
-    label: "Draft",
-    className: "bg-gray-100 text-gray-800 border-gray-200",
-  },
-  IN_PROGRESS: {
-    label: "In Progress",
-    className: "bg-blue-100 text-blue-800 border-blue-200",
-  },
-  COMPLETED: {
-    label: "Completed",
-    className: "bg-green-100 text-green-800 border-green-200",
-  },
-};
 
 export function ProductAssessmentsList({
   products,
@@ -63,33 +45,35 @@ export function ProductAssessmentsList({
       ) : (
         <div className="grid gap-3">
           {products.map((product) => {
-            const status = statusConfig[product.status] ?? {
-              label: product.status,
-              className: "bg-gray-100 text-gray-800 border-gray-200",
-            };
-
-            const href = product.result
+            const viewHref = product.result
               ? `/org/${orgId}/product/${product.id}/results`
-              : `/org/${orgId}/product/${product.id}`;
+              : `/org/${orgId}/product/${product.id}/wizard`;
+            const editHref = `/org/${orgId}/product/${product.id}/wizard`;
 
             return (
-              <Link key={product.id} href={href}>
-                <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                  <CardContent className="flex items-center justify-between py-4">
-                    <div className="flex items-center gap-4">
-                      <span className="font-medium">
-                        {product.projectName}
-                      </span>
-                      <Badge className={status.className}>
-                        {status.label}
-                      </Badge>
-                    </div>
+              <Card key={product.id} className="hover:bg-muted/50 transition-colors">
+                <CardContent className="flex items-center justify-between gap-4 py-4">
+                  <Link href={viewHref} className="min-w-0 flex-1 flex items-center gap-4 hover:opacity-90">
+                    <span className="font-medium truncate">
+                      {product.projectName}
+                    </span>
+                    <StatusIndicator
+                      variant={{ type: "assessmentStatus", value: product.status }}
+                    />
                     {product.result && (
-                      <RiskTierBadge tier={product.result.riskTier} size="sm" />
+                      <StatusIndicator
+                        variant={{ type: "riskTier", value: product.result.riskTier }}
+                      />
                     )}
-                  </CardContent>
-                </Card>
-              </Link>
+                  </Link>
+                  <Button variant="ghost" size="sm" asChild className="shrink-0">
+                    <Link href={editHref} className="gap-1.5">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

@@ -12,6 +12,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
@@ -77,15 +78,22 @@ export default function Step9StakeholderEngagement() {
   return (
     <Form {...form}>
       <form className="space-y-8">
+        <p className="text-sm text-muted-foreground">
+          Stakeholder and impact practices align with NIST GOVERN 4.2, 5.1, 5.2 and inform governance recommendations.
+        </p>
+        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
+            Impact & Stakeholder Practices
+          </h3>
         <FormField
           control={form.control}
           name="impactAssessments"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Impact Assessments</FormLabel>
-              <p className="text-sm text-muted-foreground">
-                How does your organization conduct AI impact assessments?
-              </p>
+              <FormDescription>
+                How does your organization conduct AI impact assessments? Informs governance and control selection.
+              </FormDescription>
               <FormControl>
                 <RadioGroup
                   value={field.value}
@@ -122,16 +130,17 @@ export default function Step9StakeholderEngagement() {
           )}
         />
 
+        </section>
         <FormField
           control={form.control}
           name="externalEngagement"
           render={({ field }) => (
             <FormItem>
               <FormLabel>External Stakeholder Engagement</FormLabel>
-              <p className="text-sm text-muted-foreground">
+              <FormDescription>
                 How often does your organization engage with external stakeholders on AI
-                governance?
-              </p>
+                governance? Informs governance and transparency recommendations.
+              </FormDescription>
               <FormControl>
                 <RadioGroup
                   value={field.value}
@@ -168,6 +177,10 @@ export default function Step9StakeholderEngagement() {
           )}
         />
 
+        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2 mb-2">
+            Recourse & Principles
+          </h3>
         <FormField
           control={form.control}
           name="recourseMechanisms"
@@ -175,10 +188,10 @@ export default function Step9StakeholderEngagement() {
             <FormItem className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel>Recourse Mechanisms</FormLabel>
-                <p className="text-sm text-muted-foreground">
+                <FormDescription>
                   Does your organization provide mechanisms for individuals to challenge
-                  AI-driven decisions?
-                </p>
+                  AI-driven decisions? Informs MANAGE and governance control selection.
+                </FormDescription>
               </div>
               <FormControl>
                 <Switch
@@ -198,9 +211,9 @@ export default function Step9StakeholderEngagement() {
             <FormItem className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel>Published AI Principles</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Has your organization published AI ethics principles or guidelines?
-                </p>
+                <FormDescription>
+                  Has your organization published AI ethics principles or guidelines? Informs policy and governance recommendations.
+                </FormDescription>
               </div>
               <FormControl>
                 <Switch
@@ -212,6 +225,7 @@ export default function Step9StakeholderEngagement() {
             </FormItem>
           )}
         />
+        </section>
       </form>
     </Form>
   );

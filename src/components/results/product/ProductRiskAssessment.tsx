@@ -12,6 +12,14 @@ import { StaggeredList, StaggeredItem } from "@/components/animation/StaggeredLi
 import { StatCard } from "@/components/ui/stat-card";
 import { Shield, ShieldCheck } from "lucide-react";
 import { RISK_TIER_COLORS } from "@/components/charts/chart-colors";
+import { ResultsSectionIntro } from "@/components/results/shared/ResultsSectionIntro";
+
+function formatFactorLabel(factor: string): string {
+  return factor
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 
 interface FitForAiResult {
   validated: boolean;
@@ -58,23 +66,29 @@ export function ProductRiskAssessment({
   const barData = [...objectDrivers]
     .sort((a, b) => b.contribution - a.contribution)
     .map((d) => ({
-      name: d.factor,
+      name: formatFactorLabel(d.factor),
       value: d.contribution,
       description: d.explanation,
     }));
 
   return (
     <div className="space-y-6">
-      {/* Risk Classification - Gauge + Tier Comparison */}
       <FadeIn>
-        <Card>
+        <ResultsSectionIntro
+          description="Product risk tier, fit-for-AI outcome, and risk drivers derived from your assessment. Use this to prioritize controls and release criteria."
+        />
+      </FadeIn>
+
+      {/* Risk Classification - Gauge + Tier Comparison */}
+      <FadeIn delay={0.05}>
+        <Card className="transition-card hover-lift">
           <CardHeader>
             <CardTitle>Risk Classification</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
               <div className="flex flex-col items-center gap-3">
-                <RiskGauge score={riskScore} tier={riskTier} size="lg" />
+                <RiskGauge score={riskScore} tier={riskTier} size="lg" max={25} />
               </div>
               <div className="lg:col-span-2 grid grid-cols-2 gap-4">
                 <StatCard
@@ -98,7 +112,7 @@ export function ProductRiskAssessment({
       {/* Fit-for-AI Result */}
       <FadeIn delay={0.1}>
         <AnimatedCard
-          accentColor={fitForAiResult.validated ? "#22c55e" : "#ef4444"}
+          accentColor={fitForAiResult.validated ? "#22c55e" : "var(--destructive)"}
         >
           <CardHeader>
             <CardTitle>Fit-for-AI Assessment</CardTitle>
@@ -128,7 +142,7 @@ export function ProductRiskAssessment({
                 </>
               ) : (
                 <>
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-destructive/10 text-destructive">
                     <svg
                       className="w-4 h-4"
                       fill="none"
@@ -143,7 +157,7 @@ export function ProductRiskAssessment({
                       />
                     </svg>
                   </span>
-                  <span className="font-medium text-red-700">
+                  <span className="font-medium text-destructive">
                     Not validated for AI use
                   </span>
                 </>
@@ -283,7 +297,9 @@ export function ProductRiskAssessment({
                     <Card className="py-3 transition-card hover-lift">
                       <CardContent className="py-0 space-y-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">{driver.factor}</p>
+                          <p className="text-sm font-medium">
+                            {formatFactorLabel(driver.factor)}
+                          </p>
                           <span className="text-xs text-muted-foreground tabular-nums">
                             +{driver.contribution}
                           </span>

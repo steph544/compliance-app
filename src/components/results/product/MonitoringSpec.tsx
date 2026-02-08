@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/table";
 import { FadeIn } from "@/components/animation/FadeIn";
 import { StatCard } from "@/components/ui/stat-card";
+import { ResultsSectionIntro } from "@/components/results/shared/ResultsSectionIntro";
+import { CHART_COLORS } from "@/components/charts/chart-colors";
 import { Activity, Gauge, Leaf } from "lucide-react";
 
 interface MonitoringSpecData {
@@ -30,17 +32,38 @@ interface MonitoringSpecData {
 }
 
 interface MonitoringSpecProps {
-  monitoringSpec: MonitoringSpecData;
+  monitoringSpec?: MonitoringSpecData | null;
 }
 
 export function MonitoringSpec({ monitoringSpec }: MonitoringSpecProps) {
-  const { metrics, dashboardSpec, environmentalTracking } = monitoringSpec;
+  const spec = monitoringSpec ?? {};
+  const { metrics = [], dashboardSpec = "", environmentalTracking } = spec;
+  const hasMetrics = metrics.length > 0;
+  const hasDashboardSpec = (dashboardSpec ?? "").toString().trim().length > 0;
+  const hasContent = hasMetrics || hasDashboardSpec || environmentalTracking;
 
   return (
     <div className="space-y-6">
-      {/* Metrics Table */}
       <FadeIn>
-        <Card>
+        <ResultsSectionIntro
+          description="Metrics, thresholds, and dashboard guidance for ongoing monitoring. Use this to set up alerts and track environmental impact."
+        />
+      </FadeIn>
+
+      {!hasContent ? (
+        <FadeIn delay={0.05}>
+          <div className="rounded-lg border border-border bg-muted/20 py-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              No monitoring specification defined yet.
+            </p>
+          </div>
+        </FadeIn>
+      ) : (
+        <>
+      {/* Metrics Table */}
+      {hasMetrics && (
+        <FadeIn delay={0.05}>
+        <Card className="transition-card hover-lift">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Monitoring Metrics</CardTitle>
@@ -77,26 +100,29 @@ export function MonitoringSpec({ monitoringSpec }: MonitoringSpecProps) {
             </Table>
           </CardContent>
         </Card>
-      </FadeIn>
+        </FadeIn>
+      )}
 
       {/* Dashboard Spec */}
-      <FadeIn delay={0.1}>
-        <Card className="transition-card hover-lift">
-          <CardHeader>
-            <CardTitle>Dashboard Specification</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {dashboardSpec}
-            </p>
-          </CardContent>
-        </Card>
-      </FadeIn>
+      {hasDashboardSpec && (
+        <FadeIn delay={0.1}>
+          <Card className="transition-card hover-lift">
+            <CardHeader>
+              <CardTitle>Dashboard Specification</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {dashboardSpec}
+              </p>
+            </CardContent>
+          </Card>
+        </FadeIn>
+      )}
 
       {/* Environmental Tracking */}
       {environmentalTracking && (
         <FadeIn delay={0.2}>
-          <Card>
+          <Card className="transition-card hover-lift">
             <CardHeader>
               <CardTitle>Environmental Tracking</CardTitle>
             </CardHeader>
@@ -106,24 +132,26 @@ export function MonitoringSpec({ monitoringSpec }: MonitoringSpecProps) {
                   value={environmentalTracking.modelSize}
                   label="Model Size"
                   icon={Gauge}
-                  accentColor="#6366f1"
+                  accentColor={CHART_COLORS[0]}
                 />
                 <StatCard
                   value={environmentalTracking.inferenceVolume}
                   label="Inference Volume"
                   icon={Activity}
-                  accentColor="#06b6d4"
+                  accentColor={CHART_COLORS[1]}
                 />
                 <StatCard
                   value={environmentalTracking.estimatedFootprint}
                   label="Estimated Footprint"
                   icon={Leaf}
-                  accentColor="#22c55e"
+                  accentColor={CHART_COLORS[2]}
                 />
               </div>
             </CardContent>
           </Card>
         </FadeIn>
+      )}
+        </>
       )}
     </div>
   );

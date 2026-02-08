@@ -33,6 +33,7 @@ export function mapCompliance(
       ],
       applicability:
         "Applicable because the system operates in an EU jurisdiction and is used by customers or the public. The EU AI Act imposes obligations proportional to the risk level of the AI system.",
+      triggerSummary: "Your organization operates in an EU jurisdiction and this product is customer- or public-facing.",
     });
   }
 
@@ -49,6 +50,7 @@ export function mapCompliance(
       ],
       applicability:
         "Applicable because the system processes protected health information (PHI) within a US jurisdiction. HIPAA requires safeguards for the confidentiality, integrity, and availability of PHI.",
+      triggerSummary: "This product processes PHI and your organization operates in the US.",
     });
   }
 
@@ -65,6 +67,7 @@ export function mapCompliance(
       ],
       applicability:
         "Applicable because the system processes payment card industry data. PCI-DSS requirements apply to all system components that store, process, or transmit cardholder data.",
+      triggerSummary: "This product processes payment card (PCI) data.",
     });
   }
 
@@ -81,6 +84,7 @@ export function mapCompliance(
       ],
       applicability:
         "Applicable because the system processes data related to children. COPPA imposes strict requirements on the collection and use of personal information from children under 13.",
+      triggerSummary: "This product processes data related to children.",
     });
   }
 
@@ -97,6 +101,7 @@ export function mapCompliance(
       ],
       applicability:
         "Applicable because the system makes automated decisions affecting individuals in US jurisdictions. Multiple states (Colorado, Illinois, Connecticut, and others) have enacted or proposed algorithmic accountability requirements.",
+      triggerSummary: "Your organization operates in the US and this product can deny services or makes automated decisions affecting individuals.",
     });
   }
 
@@ -113,6 +118,7 @@ export function mapCompliance(
       ],
       applicability:
         "Applicable because the system processes biometric data. Illinois BIPA and similar state laws impose strict requirements on the collection, use, retention, and destruction of biometric identifiers.",
+      triggerSummary: "This product processes biometric data.",
     });
   }
 

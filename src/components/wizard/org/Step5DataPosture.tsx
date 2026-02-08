@@ -12,6 +12,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -53,13 +54,16 @@ export default function Step5DataPosture() {
   return (
     <Form {...form}>
       <form className="space-y-6">
-        <div>
-          <h3 className="text-sm font-medium mb-1">Data Sensitivity Profile</h3>
-          <p className="text-sm text-muted-foreground">
-            Select all data types and considerations that apply to your organization.
-          </p>
-        </div>
-
+        <p className="text-sm text-muted-foreground">
+          Data types drive privacy and security control recommendations and NIST mapping.
+        </p>
+        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
+            Data Sensitivity Profile
+          </h3>
+          <FormDescription>
+            Select all data types and considerations that apply to your organization. Used to tailor data governance and evidence requirements.
+          </FormDescription>
         <div className="grid gap-4">
           {DATA_TYPES.map((dataType) => (
             <FormField
@@ -81,6 +85,7 @@ export default function Step5DataPosture() {
             />
           ))}
         </div>
+        </section>
       </form>
     </Form>
   );

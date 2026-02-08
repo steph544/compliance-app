@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { SectionHeader } from "@/components/wizard/SectionHeader";
 
 type Step9Data = z.infer<typeof productStep9Schema>;
 
@@ -82,40 +83,40 @@ export default function Step9ExistingControls() {
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
-        <div>
-          <h3 className="text-sm font-medium mb-1">Existing Controls</h3>
-          <p className="text-sm text-muted-foreground">
-            Indicate which controls are currently in place for this AI project.
-          </p>
-        </div>
-
-        <div className="grid gap-4">
-          {CONTROL_FIELDS.map((controlField) => (
-            <FormField
-              key={controlField.name}
-              control={form.control}
-              name={controlField.name}
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel>{controlField.label}</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      {controlField.description}
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-        </div>
+      <form className="space-y-8">
+        <p className="text-sm text-muted-foreground">
+          Existing controls inform MEASURE 1.3, MANAGE 4.1, GOVERN 4.3 recommendations.
+        </p>
+        <section className="space-y-4">
+          <SectionHeader
+            title="Existing controls"
+            description="Indicate which controls are currently in place for this AI project."
+            accentBorder
+          />
+          <div className="grid gap-3">
+            {CONTROL_FIELDS.map((controlField) => (
+              <FormField
+                key={controlField.name}
+                control={form.control}
+                name={controlField.name}
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel>{controlField.label}</FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        {controlField.description}
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
+        </section>
       </form>
     </Form>
   );

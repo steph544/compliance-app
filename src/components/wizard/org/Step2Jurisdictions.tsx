@@ -12,6 +12,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -73,15 +74,22 @@ export default function Step2Jurisdictions() {
   return (
     <Form {...form}>
       <form className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          This step informs jurisdiction-specific controls and compliance mapping.
+        </p>
+        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
+            Operating jurisdictions
+          </h3>
         <FormField
           control={form.control}
           name="countries"
           render={() => (
             <FormItem>
               <FormLabel>Operating Jurisdictions</FormLabel>
-              <p className="text-sm text-muted-foreground">
-                Select all countries or regions where your organization operates.
-              </p>
+              <FormDescription>
+                Select all countries or regions where your organization operates. Used to tailor regulatory expectations and control recommendations.
+              </FormDescription>
               <div className="grid grid-cols-2 gap-3 mt-2">
                 {COUNTRIES.map((country) => (
                   <FormField
@@ -115,18 +123,23 @@ export default function Step2Jurisdictions() {
             </FormItem>
           )}
         />
+        </section>
 
         {showUsStates && (
+          <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+            <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
+              U.S. state jurisdictions
+            </h3>
           <FormField
             control={form.control}
             name="usStates"
             render={() => (
               <FormItem>
                 <FormLabel>U.S. State Jurisdictions</FormLabel>
-                <p className="text-sm text-muted-foreground">
+                <FormDescription>
                   Select the U.S. states with specific AI or data privacy regulations
-                  relevant to your operations.
-                </p>
+                  relevant to your operations. Informs state-level compliance and control selection.
+                </FormDescription>
                 <div className="grid grid-cols-2 gap-3 mt-2">
                   {US_STATES.map((state) => (
                     <FormField
@@ -160,6 +173,7 @@ export default function Step2Jurisdictions() {
               </FormItem>
             )}
           />
+          </section>
         )}
       </form>
     </Form>

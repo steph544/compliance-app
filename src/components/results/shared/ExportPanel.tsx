@@ -2,6 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FadeIn } from "@/components/animation/FadeIn";
+import { StaggeredList, StaggeredItem } from "@/components/animation/StaggeredList";
+import { ResultsSectionIntro } from "@/components/results/shared/ResultsSectionIntro";
 
 interface ExportPanelProps {
   type: "org" | "product";
@@ -22,30 +25,37 @@ export function ExportPanel({ type, exportUrl }: ExportPanelProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Export {type === "org" ? "Organization" : "Product"} Results
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          Download the {type === "org" ? "organization" : "product"} assessment
-          results in your preferred format.
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          {formats.map(({ label, format }) => (
-            <Button
-              key={format}
-              variant="outline"
-              onClick={() => handleExport(format)}
-              className="w-full"
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <FadeIn>
+        <ResultsSectionIntro
+          description="Download assessment results for reporting, integration, or archival. Choose a format below; the file will open in a new tab."
+        />
+      </FadeIn>
+
+      <FadeIn delay={0.05}>
+        <Card className="transition-card hover-lift">
+          <CardHeader>
+            <CardTitle>
+              Export {type === "org" ? "Organization" : "Product"} Results
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StaggeredList className="grid grid-cols-2 gap-3" staggerDelay={0.04}>
+              {formats.map(({ label, format }) => (
+                <StaggeredItem key={format}>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExport(format)}
+                    className="w-full"
+                  >
+                    {label}
+                  </Button>
+                </StaggeredItem>
+              ))}
+            </StaggeredList>
+          </CardContent>
+        </Card>
+      </FadeIn>
+    </div>
   );
 }

@@ -21,7 +21,7 @@ interface NistControlCardProps {
 }
 
 const designationStyles: Record<string, string> = {
-  REQUIRED: "bg-red-100 text-red-800",
+  REQUIRED: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
   RECOMMENDED: "bg-amber-100 text-amber-800",
   OPTIONAL: "bg-gray-100 text-gray-700",
 };
@@ -73,13 +73,26 @@ export function NistControlCard({
           : "border-border"
       }`}
     >
-      {/* Main Row */}
-      <div className="flex items-start gap-3 p-3">
-        <Checkbox
-          checked={isImplemented}
-          onCheckedChange={() => onToggle(entry.controlId)}
-          className="mt-0.5"
-        />
+      {/* Main Row — click anywhere to toggle selection */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onToggle(entry.controlId)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle(entry.controlId);
+          }
+        }}
+        className="flex items-start gap-3 p-3 cursor-pointer"
+      >
+        <div onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={isImplemented}
+            onCheckedChange={() => onToggle(entry.controlId)}
+            className="mt-0.5"
+          />
+        </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -96,19 +109,20 @@ export function NistControlCard({
               {entry.controlType}
             </Badge>
           </div>
-          <p
-            className={`text-sm font-medium mt-1 ${
-              isImplemented ? "line-through text-muted-foreground" : ""
-            }`}
-          >
+          <p className="text-sm font-medium mt-1">
             {entry.controlName}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {entry.finding}
           </p>
+          {entry.implementationVendor && entry.implementationService && (
+            <p className="text-xs mt-1.5 font-medium text-muted-foreground">
+              {entry.implementationVendor === "aws" ? "AWS" : "Azure"}: {entry.implementationService}
+            </p>
+          )}
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setShowNotes(!showNotes)}
             className="p-1 rounded hover:bg-muted transition-colors"

@@ -103,18 +103,24 @@ export default function ProductWizardPage() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <p className="text-gray-500">Loading product assessment...</p>
+        <p className="text-muted-foreground text-sm">Loading product assessment…</p>
       </div>
     );
   }
 
+  const currentPhase = productSteps[currentStep - 1]?.phase;
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <p className="mb-4 text-sm text-muted-foreground">
+        This assessment walks through <strong>Map</strong> (context and risks), <strong>Measure</strong> (testing and monitoring), and <strong>Manage</strong> (response and governance).
+      </p>
       <WizardShell
         steps={productSteps}
         onComplete={handleComplete}
         onSaveStep={handleSaveStep}
         isSaving={isSaving}
+        phaseLabel={currentPhase}
       >
         {(() => {
           const StepComponent = STEP_COMPONENTS[currentStep];

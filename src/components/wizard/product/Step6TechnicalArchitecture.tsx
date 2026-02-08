@@ -17,6 +17,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { SectionHeader } from "@/components/wizard/SectionHeader";
+import { cn } from "@/lib/utils";
 
 type Step6Data = z.infer<typeof productStep6Schema>;
 
@@ -85,139 +87,142 @@ export default function Step6TechnicalArchitecture() {
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
-        <FormField
-          control={form.control}
-          name="humanAIConfig"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Human-AI Configuration</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="grid gap-3"
-                >
-                  {HUMAN_AI_CONFIGS.map((config) => (
-                    <div
-                      key={config.value}
-                      className="flex items-start gap-3 rounded-lg border p-4"
-                    >
-                      <RadioGroupItem
-                        value={config.value}
-                        id={`humanAIConfig-${config.value}`}
-                        className="mt-1"
-                      />
-                      <div>
-                        <Label htmlFor={`humanAIConfig-${config.value}`}>
-                          {config.label}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {config.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="operatorProficiency"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Operator Proficiency Requirements</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Describe the skill level and training required for operators..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="fallback"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Fallback Plan</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Describe what happens when the AI system is unavailable or fails..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="modelSize"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Model Size</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="grid gap-3"
-                >
-                  {MODEL_SIZES.map((size) => (
-                    <div key={size.value} className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value={size.value}
-                        id={`modelSize-${size.value}`}
-                      />
-                      <Label htmlFor={`modelSize-${size.value}`}>
-                        {size.label}
+      <form className="space-y-8">
+        <p className="text-sm text-muted-foreground">
+          Architecture and human-AI config inform MAP 3.4, MAP 3.5, GOVERN 3.2, MEASURE 2.10.
+        </p>
+        <section className="space-y-5">
+          <SectionHeader
+            title="Human–AI configuration"
+            description="How humans interact with and oversee the AI system."
+            accentBorder
+          />
+          <FormField
+            control={form.control}
+            name="humanAIConfig"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2">
+                    {HUMAN_AI_CONFIGS.map((config) => (
+                      <Label
+                        key={config.value}
+                        htmlFor={`humanAIConfig-${config.value}`}
+                        className={cn(
+                          "flex cursor-pointer items-start gap-3 rounded-lg border-2 px-4 py-3 transition-colors hover:border-muted-foreground/40",
+                          field.value === config.value ? "border-primary bg-primary/5" : "border-border bg-muted/20"
+                        )}
+                      >
+                        <RadioGroupItem value={config.value} id={`humanAIConfig-${config.value}`} className="mt-1" />
+                        <div>
+                          <span className="font-medium text-foreground">{config.label}</span>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{config.description}</p>
+                        </div>
                       </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="operatorProficiency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Operator proficiency requirements</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe the skill level and training required for operators..."
+                    className="min-h-[80px] resize-y"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="fallback"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fallback plan</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe what happens when the AI system is unavailable or fails..."
+                    className="min-h-[80px] resize-y"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
 
-        <FormField
-          control={form.control}
-          name="inferenceVolume"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Inference Volume</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="grid gap-3"
-                >
-                  {INFERENCE_VOLUMES.map((volume) => (
-                    <div key={volume.value} className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value={volume.value}
-                        id={`inferenceVolume-${volume.value}`}
-                      />
-                      <Label htmlFor={`inferenceVolume-${volume.value}`}>
-                        {volume.label}
+        <section className="space-y-5">
+          <SectionHeader
+            title="Scale & infrastructure"
+            description="Model size and expected inference volume."
+            accentBorder
+          />
+          <FormField
+            control={form.control}
+            name="modelSize"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Model size</FormLabel>
+                <FormControl>
+                  <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2 sm:grid-cols-3">
+                    {MODEL_SIZES.map((size) => (
+                      <Label
+                        key={size.value}
+                        htmlFor={`modelSize-${size.value}`}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg border-2 px-4 py-3 transition-colors hover:border-muted-foreground/40",
+                          field.value === size.value ? "border-primary bg-primary/5" : "border-border bg-muted/20"
+                        )}
+                      >
+                        <RadioGroupItem value={size.value} id={`modelSize-${size.value}`} />
+                        <span className="font-medium text-foreground">{size.label}</span>
                       </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="inferenceVolume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Inference volume</FormLabel>
+                <FormControl>
+                  <RadioGroup value={field.value} onValueChange={field.onChange} className="grid gap-2 sm:grid-cols-3">
+                    {INFERENCE_VOLUMES.map((volume) => (
+                      <Label
+                        key={volume.value}
+                        htmlFor={`inferenceVolume-${volume.value}`}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg border-2 px-4 py-3 transition-colors hover:border-muted-foreground/40",
+                          field.value === volume.value ? "border-primary bg-primary/5" : "border-border bg-muted/20"
+                        )}
+                      >
+                        <RadioGroupItem value={volume.value} id={`inferenceVolume-${volume.value}`} />
+                        <span className="font-medium text-foreground">{volume.label}</span>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
       </form>
     </Form>
   );

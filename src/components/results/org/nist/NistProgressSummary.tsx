@@ -9,6 +9,8 @@ import type { NistMappingEntry } from "@/lib/scoring/nist-mapper";
 interface NistProgressSummaryProps {
   entries: NistMappingEntry[];
   implementedControlIds: Set<string>;
+  /** When "compact", renders a slim strip (X/Y + bar + pills) for use next to tabs */
+  variant?: "default" | "compact";
 }
 
 const functionLabels: Record<string, string> = {
@@ -16,19 +18,6 @@ const functionLabels: Record<string, string> = {
   MAP: "Map",
   MEASURE: "Measure",
   MANAGE: "Manage",
-};
-
-const functionColors: Record<string, string> = {
-  GOVERN: "bg-blue-100 text-blue-800",
-  MAP: "bg-emerald-100 text-emerald-800",
-  MEASURE: "bg-amber-100 text-amber-800",
-  MANAGE: "bg-purple-100 text-purple-800",
-};
-
-const designationColors: Record<string, string> = {
-  REQUIRED: "bg-red-100 text-red-800",
-  RECOMMENDED: "bg-amber-100 text-amber-800",
-  OPTIONAL: "bg-gray-100 text-gray-700",
 };
 
 function getNistFunction(nistRef: string): string {
@@ -43,6 +32,7 @@ function getNistFunction(nistRef: string): string {
 export function NistProgressSummary({
   entries,
   implementedControlIds,
+  variant = "default",
 }: NistProgressSummaryProps) {
   // Deduplicate controls (same control can map to multiple NIST refs)
   const uniqueControls = new Map<string, NistMappingEntry>();
@@ -79,6 +69,41 @@ export function NistProgressSummary({
     if (implementedControlIds.has(controlId)) {
       designationStats[d].implemented++;
     }
+  }
+
+  if (variant === "compact") {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-medium whitespace-nowrap">
+            {implementedCount}/{totalControls} implemented
+          </span>
+          <Progress value={progressPercent} className="h-2 flex-1 min-w-[80px] max-w-[200px]" />
+          <span className="text-sm text-muted-foreground">{progressPercent}%</span>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          {["GOVERN", "MAP", "MEASURE", "MANAGE"].map((func) => {
+            const stat = functionStats[func];
+            if (!stat) return null;
+            return (
+              <Badge key={func} variant="secondary">
+                {functionLabels[func]} {stat.implemented}/{stat.total}
+              </Badge>
+            );
+          })}
+          <span className="text-xs text-muted-foreground mx-1">·</span>
+          {["REQUIRED", "RECOMMENDED", "OPTIONAL"].map((d) => {
+            const stat = designationStats[d];
+            if (!stat) return null;
+            return (
+              <Badge key={d} variant="outline">
+                {d.charAt(0) + d.slice(1).toLowerCase()} {stat.implemented}/{stat.total}
+              </Badge>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -118,10 +143,7 @@ export function NistProgressSummary({
                 const stat = functionStats[func];
                 if (!stat) return null;
                 return (
-                  <Badge
-                    key={func}
-                    className={functionColors[func]}
-                  >
+                  <Badge key={func} variant="secondary">
                     {functionLabels[func]} {stat.implemented}/{stat.total}
                   </Badge>
                 );
@@ -139,10 +161,7 @@ export function NistProgressSummary({
                 const stat = designationStats[d];
                 if (!stat) return null;
                 return (
-                  <Badge
-                    key={d}
-                    className={designationColors[d]}
-                  >
+                  <Badge key={d} variant="outline">
                     {d.charAt(0) + d.slice(1).toLowerCase()} {stat.implemented}/
                     {stat.total}
                   </Badge>

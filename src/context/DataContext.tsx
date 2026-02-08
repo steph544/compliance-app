@@ -11,15 +11,24 @@ import * as store from "@/lib/store";
 
 type DataContextValue = {
   data: AppData;
-  createOrganization: (name: string) => Organization;
-  getOrganization: (id: string) => Organization | undefined;
-  getOrganizationAssessment: (orgId: string) => OrganizationAssessment | undefined;
-  saveOrganizationAssessment: typeof store.saveOrganizationAssessment;
-  createProductAssessment: (orgId: string, name: string) => ProductAssessment;
-  getProductAssessments: (orgId: string) => ProductAssessment[];
-  getProductAssessment: (id: string) => ProductAssessment | undefined;
-  saveProductAssessment: typeof store.saveProductAssessment;
-  refresh: () => void;
+  /** Set when refresh() fails (e.g. network or server error). 401 triggers redirect, so not included here. */
+  organizationsLoadError: string | null;
+  refresh: () => Promise<void>;
+  createOrganization: (name: string) => Promise<Organization>;
+  getOrganization: (id: string) => Promise<Organization | undefined>;
+  getOrganizationAssessment: (orgId: string) => Promise<OrganizationAssessment | undefined>;
+  saveOrganizationAssessment: (
+    organizationId: string,
+    partial: Parameters<typeof store.saveOrganizationAssessment>[1]
+  ) => Promise<OrganizationAssessment>;
+  createProductAssessment: (orgId: string, name: string) => Promise<ProductAssessment>;
+  getProductAssessments: (orgId: string) => Promise<ProductAssessment[]>;
+  getProductAssessment: (orgId: string, projectId: string) => Promise<ProductAssessment | undefined>;
+  saveProductAssessment: (
+    orgId: string,
+    projectId: string,
+    partial: Parameters<typeof store.saveProductAssessment>[2]
+  ) => Promise<ProductAssessment | undefined>;
 };
 
 const DataContext = React.createContext<DataContextValue | null>(null);
@@ -30,57 +39,80 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     organizationAssessments: [],
     productAssessments: [],
   });
+  const [organizationsLoadError, setOrganizationsLoadError] = useState<string | null>(null);
 
-  const refresh = useCallback(() => {
-    setData(store.load());
+  const refresh = useCallback(async () => {
+    setOrganizationsLoadError(null);
+    try {
+      const orgs = await store.listOrganizations();
+      setData((prev) => ({
+        ...prev,
+        organizations: orgs,
+      }));
+    } catch (err) {
+      setOrganizationsLoadError(err instanceof Error ? err.message : "Failed to load organizations");
+    }
   }, []);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  const createOrganization = useCallback((name: string) => {
-    const org = store.createOrganization(name);
-    setData(store.load());
+  const createOrganization = useCallback(async (name: string) => {
+    const org = await store.createOrganization(name);
+    await refresh();
     return org;
-  }, []);
+  }, [refresh]);
 
-  const saveOrganizationAssessment = useCallback(
-    (organizationId: string, partial: Parameters<typeof store.saveOrganizationAssessment>[1]) => {
-      const result = store.saveOrganizationAssessment(organizationId, partial);
-      setData(store.load());
-      return result;
-    },
+  const getOrganization = useCallback((id: string) => store.getOrganization(id), []);
+
+  const getOrganizationAssessment = useCallback(
+    (orgId: string) => store.getOrganizationAssessment(orgId),
     []
   );
 
-  const createProductAssessment = useCallback((orgId: string, name: string) => {
-    const assessment = store.createProductAssessment(orgId, name);
-    setData(store.load());
-    return assessment;
-  }, []);
+  const saveOrganizationAssessment = useCallback(
+    (organizationId: string, partial: Parameters<typeof store.saveOrganizationAssessment>[1]) =>
+      store.saveOrganizationAssessment(organizationId, partial),
+    []
+  );
+
+  const createProductAssessment = useCallback(
+    async (orgId: string, name: string) => store.createProductAssessment(orgId, name),
+    []
+  );
+
+  const getProductAssessments = useCallback(
+    (orgId: string) => store.getProductAssessments(orgId),
+    []
+  );
+
+  const getProductAssessment = useCallback(
+    (orgId: string, projectId: string) => store.getProductAssessment(orgId, projectId),
+    []
+  );
 
   const saveProductAssessment = useCallback(
-    (assessmentId: string, partial: Parameters<typeof store.saveProductAssessment>[1]) => {
-      const result = store.saveProductAssessment(assessmentId, partial);
-      setData(store.load());
-      return result;
-    },
+    (
+      orgId: string,
+      projectId: string,
+      partial: Parameters<typeof store.saveProductAssessment>[2]
+    ) => store.saveProductAssessment(orgId, projectId, partial),
     []
   );
 
   const value: DataContextValue = {
     data,
+    organizationsLoadError,
+    refresh,
     createOrganization,
-    getOrganization: (id) => data.organizations.find((o) => o.id === id),
-    getOrganizationAssessment: (orgId) =>
-      data.organizationAssessments.find((a) => a.organizationId === orgId),
+    getOrganization,
+    getOrganizationAssessment,
     saveOrganizationAssessment,
     createProductAssessment,
-    getProductAssessments: (orgId) => data.productAssessments.filter((a) => a.organizationId === orgId),
-    getProductAssessment: (id) => data.productAssessments.find((a) => a.id === id),
+    getProductAssessments,
+    getProductAssessment,
     saveProductAssessment,
-    refresh,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

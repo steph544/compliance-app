@@ -1,14 +1,11 @@
 "use client";
 
 import type {
-  AppData,
   Organization,
   OrganizationAssessment,
   Playbook,
   ProductAssessment,
 } from "./types";
-
-const STORAGE_KEY = "compliance-app-data";
 
 const emptyPlaybook: Playbook = {
   map: { methods: "", templates: "", tools: "" },
@@ -16,164 +13,248 @@ const emptyPlaybook: Playbook = {
   manage: { methods: "", templates: "", tools: "" },
 };
 
-function load(): AppData {
-  if (typeof window === "undefined") {
-    return {
-      organizations: [],
-      organizationAssessments: [],
-      productAssessments: [],
-    };
+const defaultGovern = {
+  legalRegulatoryAwareness: "",
+  policiesAndProcedures: "",
+  riskTolerance: "",
+  documentationAndTransparency: "",
+  monitoringAndReview: "",
+  aiSystemInventory: "",
+  rolesAndResponsibilities: "",
+  training: "",
+  leadershipAccountability: "",
+  diversityAndInclusion: "",
+  humanAIConfigurations: "",
+  riskCulture: "",
+};
+
+const emptyMap = {
+  contextAndStakeholders: "",
+  taskAndMethods: "",
+  knowledgeLimitsAndOversight: "",
+  tevvConsiderations: "",
+  evidence: "",
+};
+const emptyMeasure = {
+  performanceMetrics: "",
+  testingAndValidation: "",
+  monitoringAndOngoingEval: "",
+  evidence: "",
+};
+const emptyManage = {
+  resourceAllocation: "",
+  incidentResponse: "",
+  reviewAndAdjustment: "",
+  evidence: "",
+};
+
+async function apiGet<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: "include" });
+  if (res.status === 401) {
+    window.location.href = "/sign-in";
+    throw new Error("Unauthorized");
   }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { organizations: [], organizationAssessments: [], productAssessments: [] };
-    return JSON.parse(raw) as AppData;
-  } catch {
-    return { organizations: [], organizationAssessments: [], productAssessments: [] };
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Request failed: ${res.status}`);
   }
+  return res.json() as Promise<T>;
 }
 
-function save(data: AppData): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+async function apiPost<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+  if (res.status === 401) {
+    window.location.href = "/sign-in";
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Request failed: ${res.status}`);
+  }
+  return res.json() as Promise<T>;
 }
 
-function id(): string {
-  return Math.random().toString(36).slice(2, 12);
+async function apiPatch<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+  if (res.status === 401) {
+    window.location.href = "/sign-in";
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Request failed: ${res.status}`);
+  }
+  return res.json() as Promise<T>;
 }
 
-export function createOrganization(name: string): Organization {
-  const org: Organization = {
-    id: id(),
-    name,
-    createdAt: new Date().toISOString(),
+type ApiOrgAssessment = {
+  id: string;
+  orgName: string;
+  answers: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ApiProductAssessment = {
+  id: string;
+  projectName: string;
+  answers: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+function mapOrgToOrganization(row: ApiOrgAssessment): Organization {
+  return {
+    id: row.id,
+    name: row.orgName,
+    createdAt: row.createdAt,
   };
-  const data = load();
-  data.organizations.push(org);
-  save(data);
-  return org;
 }
 
-export function getOrganization(orgId: string): Organization | undefined {
-  return load().organizations.find((o) => o.id === orgId);
-}
-
-export function getOrganizationAssessment(orgId: string): OrganizationAssessment | undefined {
-  return load().organizationAssessments.find((a) => a.organizationId === orgId);
-}
-
-export function saveOrganizationAssessment(
-  organizationId: string,
-  partial: Partial<Omit<OrganizationAssessment, "id" | "organizationId" | "updatedAt">>
+function mapAnswersToOrgAssessment(
+  orgId: string,
+  answers: Record<string, unknown> | null,
+  updatedAt: string
 ): OrganizationAssessment {
-  const data = load();
-  const existing = data.organizationAssessments.find((a) => a.organizationId === organizationId);
-  const updatedAt = new Date().toISOString();
-
-  if (existing) {
-    const updated: OrganizationAssessment = {
-      ...existing,
-      ...partial,
-      govern: partial.govern ?? existing.govern,
-      playbook: partial.playbook ?? existing.playbook,
-      updatedAt,
-    };
-    const idx = data.organizationAssessments.findIndex((a) => a.id === existing.id);
-    data.organizationAssessments[idx] = updated;
-    save(data);
-    return updated;
-  }
-
-  const newAssessment: OrganizationAssessment = {
-    id: id(),
-    organizationId,
-    govern: partial.govern ?? {
-      legalRegulatoryAwareness: "",
-      policiesAndProcedures: "",
-      riskTolerance: "",
-      documentationAndTransparency: "",
-      monitoringAndReview: "",
-      aiSystemInventory: "",
-      rolesAndResponsibilities: "",
-      training: "",
-      leadershipAccountability: "",
-      diversityAndInclusion: "",
-      humanAIConfigurations: "",
-      riskCulture: "",
-    },
-    playbook: partial.playbook ?? emptyPlaybook,
+  const a = (answers ?? {}) as {
+    govern?: Record<string, string>;
+    playbook?: Playbook;
+  };
+  return {
+    id: orgId,
+    organizationId: orgId,
+    govern: a.govern
+      ? { ...defaultGovern, ...a.govern }
+      : defaultGovern,
+    playbook: a.playbook
+      ? { ...emptyPlaybook, ...a.playbook, map: { ...emptyPlaybook.map, ...a.playbook?.map }, measure: { ...emptyPlaybook.measure, ...a.playbook?.measure }, manage: { ...emptyPlaybook.manage, ...a.playbook?.manage } }
+      : emptyPlaybook,
     updatedAt,
   };
-  data.organizationAssessments.push(newAssessment);
-  save(data);
-  return newAssessment;
 }
 
-export function createProductAssessment(organizationId: string, name: string): ProductAssessment {
-  const now = new Date().toISOString();
-  const assessment: ProductAssessment = {
-    id: id(),
-    organizationId,
-    name,
-    map: {
-      contextAndStakeholders: "",
-      taskAndMethods: "",
-      knowledgeLimitsAndOversight: "",
-      tevvConsiderations: "",
-      evidence: "",
-    },
-    measure: {
-      performanceMetrics: "",
-      testingAndValidation: "",
-      monitoringAndOngoingEval: "",
-      evidence: "",
-    },
-    manage: {
-      resourceAllocation: "",
-      incidentResponse: "",
-      reviewAndAdjustment: "",
-      evidence: "",
-    },
-    createdAt: now,
-    updatedAt: now,
+function mapProductToAssessment(orgId: string, row: ApiProductAssessment): ProductAssessment {
+  const a = (row.answers ?? {}) as { map?: typeof emptyMap; measure?: typeof emptyMeasure; manage?: typeof emptyManage };
+  return {
+    id: row.id,
+    organizationId: orgId,
+    name: row.projectName,
+    map: a.map ? { ...emptyMap, ...a.map } : emptyMap,
+    measure: a.measure ? { ...emptyMeasure, ...a.measure } : emptyMeasure,
+    manage: a.manage ? { ...emptyManage, ...a.manage } : emptyManage,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
-  const data = load();
-  data.productAssessments.push(assessment);
-  save(data);
-  return assessment;
 }
 
-export function getProductAssessments(organizationId: string): ProductAssessment[] {
-  return load().productAssessments.filter((a) => a.organizationId === organizationId);
+export async function listOrganizations(): Promise<Organization[]> {
+  const rows = await apiGet<ApiOrgAssessment[]>("/api/org-assessments");
+  return rows.map(mapOrgToOrganization);
 }
 
-export function getProductAssessment(assessmentId: string): ProductAssessment | undefined {
-  return load().productAssessments.find((a) => a.id === assessmentId);
+export async function createOrganization(name: string): Promise<Organization> {
+  const row = await apiPost<ApiOrgAssessment>("/api/org-assessments", { orgName: name });
+  return mapOrgToOrganization(row);
 }
 
-export function saveProductAssessment(
-  assessmentId: string,
+export async function getOrganization(orgId: string): Promise<Organization | undefined> {
+  try {
+    const row = await apiGet<ApiOrgAssessment>(`/api/org-assessments/${orgId}`);
+    return mapOrgToOrganization(row);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getOrganizationAssessment(
+  orgId: string
+): Promise<OrganizationAssessment | undefined> {
+  try {
+    const row = await apiGet<ApiOrgAssessment & { answers: Record<string, unknown> | null }>(
+      `/api/org-assessments/${orgId}`
+    );
+    return mapAnswersToOrgAssessment(orgId, row.answers, row.updatedAt);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function saveOrganizationAssessment(
+  organizationId: string,
+  partial: Partial<Omit<OrganizationAssessment, "id" | "organizationId" | "updatedAt">>
+): Promise<OrganizationAssessment> {
+  const body: { answers: { govern?: unknown; playbook?: unknown } } = {
+    answers: {},
+  };
+  if (partial.govern) body.answers.govern = partial.govern;
+  if (partial.playbook) body.answers.playbook = partial.playbook;
+
+  const row = await apiPatch<ApiOrgAssessment & { answers: Record<string, unknown> | null }>(
+    `/api/org-assessments/${organizationId}`,
+    body
+  );
+  return mapAnswersToOrgAssessment(organizationId, row.answers, row.updatedAt);
+}
+
+export async function getProductAssessments(orgId: string): Promise<ProductAssessment[]> {
+  const rows = await apiGet<ApiProductAssessment[]>(`/api/org-assessments/${orgId}/products`);
+  return rows.map((r) => mapProductToAssessment(orgId, r));
+}
+
+export async function createProductAssessment(
+  organizationId: string,
+  name: string
+): Promise<ProductAssessment> {
+  const row = await apiPost<ApiProductAssessment>(
+    `/api/org-assessments/${organizationId}/products`,
+    { projectName: name }
+  );
+  return mapProductToAssessment(organizationId, row);
+}
+
+export async function getProductAssessment(
+  orgId: string,
+  projectId: string
+): Promise<ProductAssessment | undefined> {
+  try {
+    const row = await apiGet<ApiProductAssessment>(
+      `/api/org-assessments/${orgId}/products/${projectId}`
+    );
+    return mapProductToAssessment(orgId, row);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function saveProductAssessment(
+  orgId: string,
+  projectId: string,
   partial: Partial<Omit<ProductAssessment, "id" | "organizationId" | "name" | "createdAt">>
-): ProductAssessment | undefined {
-  const data = load();
-  const idx = data.productAssessments.findIndex((a) => a.id === assessmentId);
-  if (idx === -1) return undefined;
-  const existing = data.productAssessments[idx];
-  const updated: ProductAssessment = {
-    ...existing,
-    ...partial,
-    map: partial.map ?? existing.map,
-    measure: partial.measure ?? existing.measure,
-    manage: partial.manage ?? existing.manage,
-    updatedAt: new Date().toISOString(),
-  };
-  data.productAssessments[idx] = updated;
-  save(data);
-  return updated;
+): Promise<ProductAssessment | undefined> {
+  try {
+    const body = { answers: {} as Record<string, unknown> };
+    if (partial.map) body.answers.map = partial.map;
+    if (partial.measure) body.answers.measure = partial.measure;
+    if (partial.manage) body.answers.manage = partial.manage;
+
+    const row = await apiPatch<ApiProductAssessment>(
+      `/api/org-assessments/${orgId}/products/${projectId}`,
+      body
+    );
+    return mapProductToAssessment(orgId, row);
+  } catch {
+    return undefined;
+  }
 }
 
-export function getAllOrganizations(): Organization[] {
-  return load().organizations;
-}
-
-export { load, save, emptyPlaybook };
+export { emptyPlaybook };

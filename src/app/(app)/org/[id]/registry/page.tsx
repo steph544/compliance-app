@@ -15,9 +15,9 @@ function riskTierColor(tier: string) {
     case "MEDIUM":
       return "bg-yellow-100 text-yellow-800";
     case "HIGH":
-      return "bg-red-100 text-red-800";
+      return "bg-orange-100 text-orange-800";
     case "REGULATED":
-      return "bg-purple-100 text-purple-800";
+      return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -34,7 +34,7 @@ function statusColor(status: string) {
     case "DECOMMISSIONING":
       return "bg-orange-100 text-orange-800";
     case "DECOMMISSIONED":
-      return "bg-red-100 text-red-800";
+      return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200";
     default:
       return "bg-gray-100 text-gray-800";
   }

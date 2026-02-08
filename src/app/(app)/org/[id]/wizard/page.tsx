@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { WizardShell } from "@/components/wizard/WizardShell";
 import { useWizardStore } from "@/lib/wizard/wizard-store";
@@ -35,23 +36,32 @@ export default function OrgWizardPage() {
     useWizardStore();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const id = params.id;
 
   useEffect(() => {
     reset();
     setTotalSteps(orgSteps.length);
+    setFetchError(null);
 
     async function fetchAssessment() {
       try {
         const res = await fetch(`/api/org-assessments/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch assessment");
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          const msg = (errBody as { error?: string }).error ?? `Request failed (${res.status})`;
+          setFetchError(res.status === 404 ? "Assessment not found." : msg);
+          setLoading(false);
+          return;
+        }
         const data = await res.json();
         if (data.answers && typeof data.answers === "object") {
           setAllAnswers(data.answers as Record<string, unknown>);
         }
       } catch (error) {
         console.error("Error fetching assessment:", error);
+        setFetchError("Could not load assessment. Check your connection and try again.");
       } finally {
         setLoading(false);
       }
@@ -99,7 +109,23 @@ export default function OrgWizardPage() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <p className="text-gray-500">Loading assessment...</p>
+        <p className="text-muted-foreground text-sm">Loading assessment…</p>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10">
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-6 text-center">
+          <p className="font-medium text-destructive">{fetchError}</p>
+          <Link
+            href="/dashboard"
+            className="mt-4 inline-block text-sm text-primary underline underline-offset-2 hover:no-underline"
+          >
+            Back to assessments
+          </Link>
+        </div>
       </div>
     );
   }

@@ -11,7 +11,7 @@ export default function NewOrganizationPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     const trimmed = name.trim();
@@ -19,8 +19,12 @@ export default function NewOrganizationPage() {
       setError("Organization name is required.");
       return;
     }
-    const org = createOrganization(trimmed);
-    router.push(`/organizations/${org.id}`);
+    try {
+      const org = await createOrganization(trimmed);
+      router.push(`/organizations/${org.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create organization.");
+    }
   }
 
   return (
@@ -42,7 +46,7 @@ export default function NewOrganizationPage() {
               autoFocus
             />
           </div>
-          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-3">
             <button
               type="submit"

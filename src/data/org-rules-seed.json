@@ -5,7 +5,7 @@
     "description": "Every organization regardless of risk tier requires foundational governance controls.",
     "priority": 10,
     "conditions": { "all": [{ "field": "riskTier", "operator": "in", "value": ["LOW","MEDIUM","HIGH","REGULATED"] }] },
-    "actions": { "selectControls": ["CTL-GOV-001","CTL-GOV-002","CTL-GOV-004","CTL-GOV-007","CTL-GOV-009"], "designation": "REQUIRED", "explanation": "Baseline governance controls are required for all organizations using AI." }
+    "actions": { "selectControls": ["CTL-GOV-001","CTL-GOV-002","CTL-GOV-004","CTL-GOV-007","CTL-GOV-009","CTL-GOV-011","CTL-GOV-012","CTL-MAP-007","CTL-MAN-009","CTL-MAN-010"], "designation": "REQUIRED", "explanation": "Baseline governance controls are required for all organizations using AI, including training, executive accountability, risk identification, prioritization, and incident tracking per NIST AI RMF." }
   },
   {
     "ruleId": "RULE-002",
@@ -21,7 +21,7 @@
     "description": "High and regulated risk tiers require drift detection, monitoring, red-teaming, and incident response.",
     "priority": 15,
     "conditions": { "all": [{ "field": "riskTier", "operator": "in", "value": ["HIGH","REGULATED"] }] },
-    "actions": { "selectControls": ["CTL-MEA-003","CTL-MAN-006","CTL-MEA-004","CTL-GOV-006"], "designation": "REQUIRED", "explanation": "High/Regulated risk tiers require enhanced monitoring, adversarial testing, and incident response capabilities." }
+    "actions": { "selectControls": ["CTL-MEA-003","CTL-MAN-006","CTL-MEA-004","CTL-GOV-006","CTL-GOV-013","CTL-GOV-014"], "designation": "REQUIRED", "explanation": "High/Regulated risk tiers require enhanced monitoring, adversarial testing, incident response, red-teaming, and impact assessments per NIST GOVERN-4.1 and 4.2." }
   },
   {
     "ruleId": "RULE-004",
@@ -37,7 +37,7 @@
     "description": "Customer-facing AI systems must implement prompt injection guardrails, output filtering, and performance metrics.",
     "priority": 25,
     "conditions": { "all": [{ "field": "aiUsage", "operator": "contains", "value": "customer_facing" }] },
-    "actions": { "selectControls": ["CTL-MAN-003","CTL-MAN-002","CTL-MEA-001"], "designation": "REQUIRED", "explanation": "Customer-facing AI requires output filtering, prompt injection guardrails, and performance monitoring." }
+    "actions": { "selectControls": ["CTL-MAN-003","CTL-MAN-002","CTL-MEA-001","CTL-MEA-009"], "designation": "REQUIRED", "explanation": "Customer-facing AI requires output filtering, guardrails, performance monitoring, and feedback collection per NIST MEASURE-4.1." }
   },
   {
     "ruleId": "RULE-006",
@@ -45,7 +45,7 @@
     "description": "Organizations using third-party AI components must perform vendor due diligence and model evaluation.",
     "priority": 30,
     "conditions": { "all": [{ "field": "vendorPosture.thirdPartyComponents", "operator": "eq", "value": true }] },
-    "actions": { "selectControls": ["CTL-GOV-005","CTL-MEA-007"], "designation": "REQUIRED", "explanation": "Third-party AI components require vendor due diligence and independent model evaluation per NIST GOVERN-6.1." }
+    "actions": { "selectControls": ["CTL-GOV-005","CTL-GOV-016","CTL-MEA-007"], "designation": "REQUIRED", "explanation": "Third-party AI components require vendor due diligence, contingency planning, and independent model evaluation per NIST GOVERN-6.1 and 6.2." }
   },
   {
     "ruleId": "RULE-007",
@@ -53,7 +53,7 @@
     "description": "Enterprise-scale AI deployments should implement ethics board, decommissioning policy, and rollback procedures.",
     "priority": 50,
     "conditions": { "all": [{ "field": "aiMaturity", "operator": "eq", "value": "enterprise" }] },
-    "actions": { "selectControls": ["CTL-GOV-003","CTL-GOV-010","CTL-MAN-005"], "designation": "RECOMMENDED", "explanation": "Enterprise-scale AI deployment benefits from an ethics board, decommissioning policy, and model rollback procedures." }
+    "actions": { "selectControls": ["CTL-GOV-003","CTL-GOV-010","CTL-GOV-015","CTL-MAN-005","CTL-MEA-009"], "designation": "RECOMMENDED", "explanation": "Enterprise-scale AI deployment benefits from an ethics board, decommissioning policy, rollback procedures, external feedback, and post-deployment feedback per NIST GOVERN-5.1 and MEASURE-4.1." }
   },
   {
     "ruleId": "RULE-008",
@@ -94,5 +94,37 @@
     "priority": 25,
     "conditions": { "any": [{ "field": "jurisdictions", "operator": "contains", "value": "US" }, { "field": "jurisdictions", "operator": "contains", "value": "United States" }] },
     "actions": { "selectControls": ["CTL-MAP-005"], "designation": "RECOMMENDED", "policyFlags": ["include_ccpa_rights"], "explanation": "US jurisdiction benefits from CCPA transparency rights documentation." }
+  },
+  {
+    "ruleId": "RULE-013",
+    "name": "AWS infrastructure recommends Bedrock Guardrails and content safety",
+    "description": "Organizations using AWS for AI workloads get recommended guardrail and content safety controls with AWS-specific implementation (e.g. Bedrock Guardrails).",
+    "priority": 45,
+    "conditions": { "all": [{ "field": "vendorPosture.primaryCloudInfrastructure", "operator": "eq", "value": "aws" }] },
+    "actions": { "selectControls": ["CTL-MAN-002", "CTL-MAN-003"], "designation": "RECOMMENDED", "explanation": "For AWS deployments, implement prompt injection guardrails and output filtering using Amazon Bedrock Guardrails and related AWS services where available." }
+  },
+  {
+    "ruleId": "RULE-014",
+    "name": "Azure infrastructure recommends Azure AI Content Safety",
+    "description": "Organizations using Azure for AI workloads get recommended guardrail and content safety controls with Azure-specific implementation (e.g. Azure AI Content Safety).",
+    "priority": 45,
+    "conditions": { "all": [{ "field": "vendorPosture.primaryCloudInfrastructure", "operator": "eq", "value": "azure" }] },
+    "actions": { "selectControls": ["CTL-MAN-002", "CTL-MAN-003"], "designation": "RECOMMENDED", "explanation": "For Azure deployments, implement prompt injection guardrails and output filtering using Azure AI Content Safety and related Azure offerings where available." }
+  },
+  {
+    "ruleId": "RULE-015",
+    "name": "High/Regulated tier recommends environmental impact assessment",
+    "description": "High and regulated risk tiers should assess and document environmental impact of AI systems per NIST MEASURE-2.10.",
+    "priority": 42,
+    "conditions": { "all": [{ "field": "riskTier", "operator": "in", "value": ["HIGH", "REGULATED"] }] },
+    "actions": { "selectControls": ["CTL-MEA-008"], "designation": "RECOMMENDED", "explanation": "Environmental impact assessment supports sustainability and aligns with NIST AI RMF MEASURE-2.10." }
+  },
+  {
+    "ruleId": "RULE-016",
+    "name": "Interdisciplinary teams for AI context (MAP 1.2)",
+    "description": "Organizations with interdisciplinary teams for AI design and risk management should document and reinforce MAP 1.2 practices.",
+    "priority": 35,
+    "conditions": { "all": [{ "field": "existingGovernance.interdisciplinaryTeams", "operator": "in", "value": ["partial", "yes"] }] },
+    "actions": { "selectControls": ["CTL-GOV-017"], "designation": "RECOMMENDED", "explanation": "Interdisciplinary teams with demographic and domain diversity support NIST AI RMF MAP 1.2 (context establishment)." }
   }
 ]

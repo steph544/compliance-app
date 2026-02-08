@@ -67,6 +67,9 @@ export function ExportPanel({ assessmentId, type }: ExportPanelProps) {
               <li>Governance blueprint and RACI matrix</li>
               <li>NIST AI RMF mapping</li>
               <li>Control selections and designations</li>
+              {type === "org" && (
+                <li>Controls designated for implementation (NIST compliance checklist and notes)</li>
+              )}
               <li>Monitoring plan and operations runbook</li>
               <li>Policy drafts</li>
               {type === "org" && <li>Product assessment summaries</li>}

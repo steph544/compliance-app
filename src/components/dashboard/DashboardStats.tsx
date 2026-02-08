@@ -29,9 +29,9 @@ export function DashboardStats({
     }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Stat Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <FadeIn delay={0}>
           <StatCard
             value={totalAssessments}
@@ -61,7 +61,7 @@ export function DashboardStats({
             value={donutData.length > 0 ? donutData.length : 0}
             label="Risk Tiers Active"
             icon={ShieldAlert}
-            accentColor="#ef4444"
+            accentColor="var(--accent-orange)"
           />
         </FadeIn>
       </div>
@@ -69,16 +69,16 @@ export function DashboardStats({
       {/* Risk Distribution Chart */}
       {donutData.length > 0 && (
         <FadeIn delay={0.2}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Risk Tier Distribution</CardTitle>
+          <Card className="border-border">
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-medium">Risk tier distribution</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="max-w-xs mx-auto">
+            <CardContent className="pt-0">
+              <div className="max-w-[200px] mx-auto">
                 <DonutChart
                   data={donutData}
                   centerLabel="Assessments"
-                  height={240}
+                  height={180}
                 />
               </div>
             </CardContent>

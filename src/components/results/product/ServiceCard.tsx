@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/animation/FadeIn";
+import { AnimatedCard } from "@/components/animation/AnimatedCard";
+import { ResultsSectionIntro } from "@/components/results/shared/ResultsSectionIntro";
 import {
   Target,
   Cpu,
@@ -71,8 +73,8 @@ function Section({
       <div
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
           variant === "danger"
-            ? "bg-red-100 text-red-600"
-            : "bg-muted text-muted-foreground"
+            ? "bg-destructive/10 text-destructive"
+            : "bg-muted/50 text-muted-foreground"
         }`}
       >
         <Icon className="h-4 w-4" />
@@ -80,16 +82,16 @@ function Section({
       <div className="min-w-0 flex-1">
         <h3
           className={`text-sm font-semibold mb-1 ${
-            variant === "danger" ? "text-red-600" : "text-foreground"
+            variant === "danger" ? "text-destructive" : "text-foreground"
           }`}
         >
           {title}
         </h3>
         <div
-          className={`text-sm whitespace-pre-wrap ${
+          className={`text-sm whitespace-pre-wrap rounded-lg border p-3 ${
             variant === "danger"
-              ? "text-red-600/80 bg-red-50 rounded-md p-3 border border-red-200"
-              : "text-muted-foreground"
+              ? "text-destructive/90 bg-destructive/5 border-destructive/20"
+              : "text-muted-foreground bg-muted/20 border-border"
           }`}
         >
           {children}
@@ -112,58 +114,66 @@ export function ServiceCard({ serviceCard }: ServiceCardProps) {
   };
 
   return (
-    <FadeIn>
-      <Card className="border-2 transition-card">
-        <CardHeader className="border-b bg-muted/30">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">AI Service Card</CardTitle>
-            <Button variant="outline" size="sm" onClick={handleDownload}>
-              Download as Markdown
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <Section title="Purpose & Intended Use" icon={Target}>
-            {serviceCard.purpose}
-          </Section>
+    <div className="space-y-6">
+      <FadeIn>
+        <ResultsSectionIntro
+          description="A one-page summary of the AI service for stakeholders and auditors. Share or download for documentation and compliance reviews."
+        />
+      </FadeIn>
 
-          <Separator />
+      <FadeIn delay={0.05}>
+        <AnimatedCard accentColor="#6366f1">
+          <CardHeader className="border-b border-border bg-muted/30">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">AI Service Card</CardTitle>
+              <Button variant="outline" size="sm" onClick={handleDownload}>
+                Download as Markdown
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <Section title="Purpose & Intended Use" icon={Target}>
+              {serviceCard.purpose}
+            </Section>
 
-          <Section title="Model Information" icon={Cpu}>
-            {serviceCard.model}
-          </Section>
+            <Separator />
 
-          <Separator />
+            <Section title="Model Information" icon={Cpu}>
+              {serviceCard.model}
+            </Section>
 
-          <Section title="Training Data & Provenance" icon={Database}>
-            {serviceCard.data}
-          </Section>
+            <Separator />
 
-          <Separator />
+            <Section title="Training Data & Provenance" icon={Database}>
+              {serviceCard.data}
+            </Section>
 
-          <Section title="Known Limitations" icon={AlertTriangle}>
-            {serviceCard.limitations}
-          </Section>
+            <Separator />
 
-          <Separator />
+            <Section title="Known Limitations" icon={AlertTriangle}>
+              {serviceCard.limitations}
+            </Section>
 
-          <Section title="Prohibited Uses" icon={ShieldOff} variant="danger">
-            {serviceCard.prohibitedUses}
-          </Section>
+            <Separator />
 
-          <Separator />
+            <Section title="Prohibited Uses" icon={ShieldOff} variant="danger">
+              {serviceCard.prohibitedUses}
+            </Section>
 
-          <Section title="Human Oversight Level" icon={Eye}>
-            {serviceCard.oversight}
-          </Section>
+            <Separator />
 
-          <Separator />
+            <Section title="Human Oversight Level" icon={Eye}>
+              {serviceCard.oversight}
+            </Section>
 
-          <Section title="Monitoring Requirements" icon={Activity}>
-            {serviceCard.monitoring}
-          </Section>
-        </CardContent>
-      </Card>
-    </FadeIn>
+            <Separator />
+
+            <Section title="Monitoring Requirements" icon={Activity}>
+              {serviceCard.monitoring}
+            </Section>
+          </CardContent>
+        </AnimatedCard>
+      </FadeIn>
+    </div>
   );
 }

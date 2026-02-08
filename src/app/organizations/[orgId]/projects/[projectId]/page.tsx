@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useData } from "@/context/DataContext";
-import type { ProductAssessment } from "@/lib/types";
+import type { Organization, OrganizationAssessment, ProductAssessment } from "@/lib/types";
 import { PageHeader } from "@/app/components/PageHeader";
 
 const emptyMap = {
@@ -108,27 +108,56 @@ export default function ProductAssessmentPage() {
     saveProductAssessment,
   } = useData();
 
-  const org = getOrganization(orgId);
-  const assessment = getProductAssessment(projectId);
-  const orgAssessment = getOrganizationAssessment(orgId);
-
+  const [org, setOrg] = useState<Organization | null | undefined>(undefined);
+  const [assessment, setAssessment] = useState<ProductAssessment | null | undefined>(undefined);
+  const [orgAssessment, setOrgAssessment] = useState<OrganizationAssessment | undefined>(undefined);
   const [map, setMap] = useState(emptyMap);
   const [measure, setMeasure] = useState(emptyMeasure);
   const [manage, setManage] = useState(emptyManage);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    if (assessment) {
-      setMap(assessment.map);
-      setMeasure(assessment.measure);
-      setManage(assessment.manage);
-    }
-  }, [assessment?.id]);
+    let cancelled = false;
+    getOrganization(orgId).then((o) => {
+      if (!cancelled) setOrg(o ?? null);
+    });
+    getProductAssessment(orgId, projectId).then((a) => {
+      if (!cancelled) {
+        setAssessment(a ?? null);
+        if (a) {
+          setMap(a.map);
+          setMeasure(a.measure);
+          setManage(a.manage);
+        }
+      }
+    });
+    getOrganizationAssessment(orgId).then((a) => {
+      if (!cancelled) setOrgAssessment(a);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, projectId, getOrganization, getProductAssessment, getOrganizationAssessment]);
 
-  function handleSave() {
-    saveProductAssessment(projectId, { map, measure, manage });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave() {
+    setSaveError("");
+    try {
+      await saveProductAssessment(orgId, projectId, { map, measure, manage });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save.");
+    }
+  }
+
+  if (org === undefined || assessment === undefined) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <PageHeader title="Loading…" backHref={`/organizations/${orgId}`} backLabel="Back" />
+        <p className="text-zinc-500 mt-4">Loading…</p>
+      </div>
+    );
   }
 
   if (!org || !assessment) {
@@ -297,13 +326,16 @@ export default function ProductAssessmentPage() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-90"
           >
             Save assessment
           </button>
           {saved && (
             <span className="text-sm text-green-600 dark:text-green-400">Saved.</span>
+          )}
+          {saveError && (
+            <span className="text-sm text-destructive">{saveError}</span>
           )}
           <button
             type="button"

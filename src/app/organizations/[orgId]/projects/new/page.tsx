@@ -1,8 +1,9 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useData } from "@/context/DataContext";
+import type { Organization, OrganizationAssessment } from "@/lib/types";
 import { PageHeader } from "@/app/components/PageHeader";
 
 export default function NewProjectPage() {
@@ -10,13 +11,25 @@ export default function NewProjectPage() {
   const orgId = params.orgId as string;
   const router = useRouter();
   const { getOrganization, createProductAssessment, getOrganizationAssessment } = useData();
+  const [org, setOrg] = useState<Organization | null | undefined>(undefined);
+  const [orgAssessment, setOrgAssessment] = useState<OrganizationAssessment | undefined>(undefined);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  const org = getOrganization(orgId);
-  const orgAssessment = getOrganizationAssessment(orgId);
+  useEffect(() => {
+    let cancelled = false;
+    getOrganization(orgId).then((o) => {
+      if (!cancelled) setOrg(o ?? null);
+    });
+    getOrganizationAssessment(orgId).then((a) => {
+      if (!cancelled) setOrgAssessment(a);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, getOrganization, getOrganizationAssessment]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     const trimmed = name.trim();
@@ -24,8 +37,21 @@ export default function NewProjectPage() {
       setError("Project name is required.");
       return;
     }
-    const assessment = createProductAssessment(orgId, trimmed);
-    router.push(`/organizations/${orgId}/projects/${assessment.id}`);
+    try {
+      const assessment = await createProductAssessment(orgId, trimmed);
+      router.push(`/organizations/${orgId}/projects/${assessment.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create project.");
+    }
+  }
+
+  if (org === undefined) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <PageHeader title="Loading…" backHref={`/organizations/${orgId}`} backLabel="Back" />
+        <p className="text-zinc-500 mt-4">Loading…</p>
+      </div>
+    );
   }
 
   if (!org) {
@@ -62,7 +88,7 @@ export default function NewProjectPage() {
           Manage using your organization&apos;s playbook and provide project-specific details and
           evidence.
         </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           <div>
             <label
               htmlFor="name"
@@ -81,7 +107,7 @@ export default function NewProjectPage() {
             />
           </div>
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-destructive">{error}</p>
           )}
           <div className="flex gap-3">
             <button

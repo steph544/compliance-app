@@ -2,6 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 import { useWizardStore } from "@/lib/wizard/wizard-store";
 
 interface StepMeta {
@@ -9,6 +16,7 @@ interface StepMeta {
   title: string;
   description: string;
   nistMapping: string;
+  phase?: string;
 }
 
 interface WizardShellProps {
@@ -17,6 +25,8 @@ interface WizardShellProps {
   onComplete: () => void;
   onSaveStep: (step: number, data: Record<string, unknown>) => Promise<void>;
   isSaving?: boolean;
+  /** Optional phase label (e.g. "Map", "Measure", "Manage") for product wizard. */
+  phaseLabel?: string;
 }
 
 export function WizardShell({
@@ -25,6 +35,7 @@ export function WizardShell({
   onComplete,
   onSaveStep,
   isSaving = false,
+  phaseLabel,
 }: WizardShellProps) {
   const { currentStep, nextStep, prevStep, answers } = useWizardStore();
   const totalSteps = steps.length;
@@ -48,59 +59,90 @@ export function WizardShell({
     <div className="mx-auto max-w-3xl">
       {/* Progress */}
       <div className="mb-8">
-        <div className="mb-2 flex items-center justify-between text-sm text-gray-500">
-          <span>
+        <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
+          <span className="font-medium">
             Step {currentStep} of {totalSteps}
           </span>
           <span>{Math.round(progressPercent)}% complete</span>
         </div>
-        <Progress value={progressPercent} className="h-2" />
+        <Progress value={progressPercent} className="h-2 bg-muted" />
       </div>
 
       {/* Step header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
+      <div className="mb-6 border-l-2 border-accent-primary pl-4">
+        {phaseLabel && (
+          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Phase: {phaseLabel}
+          </p>
+        )}
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
           {currentStepMeta?.title}
         </h2>
-        <p className="mt-1 text-gray-500">{currentStepMeta?.description}</p>
-        <p className="mt-1 text-xs text-gray-400">
-          NIST AI RMF: {currentStepMeta?.nistMapping}
+        <p className="mt-1.5 text-muted-foreground">
+          {currentStepMeta?.description}
+        </p>
+        <div className="mt-1 flex items-center gap-1.5">
+          <p className="text-xs text-muted-foreground/80">
+            NIST AI RMF: {currentStepMeta?.nistMapping}
+          </p>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex text-muted-foreground/80 hover:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                  aria-label="Why we ask this"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs text-xs">
+                These NIST AI RMF subcategories guide how we tailor your governance profile and control recommendations. Your answers inform which controls and evidence matter for compliance.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <p className="mt-0.5 text-xs text-muted-foreground/70">
+          This step supports the framework areas above; your answers inform governance and control selection.
         </p>
       </div>
 
       {/* Step content */}
-      <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
+      <div className="transition-card hover-lift mb-8 rounded-xl border border-border bg-card px-6 py-6 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
         {children}
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-4">
         <Button
           variant="outline"
           onClick={prevStep}
           disabled={currentStep === 1 || isSaving}
+          className="min-w-[100px]"
         >
           Previous
         </Button>
-        <Button onClick={handleNext} disabled={isSaving}>
-          {isSaving ? "Saving..." : isLastStep ? "Complete Assessment" : "Next"}
+        <Button onClick={handleNext} disabled={isSaving} className="min-w-[100px]">
+          {isSaving ? "Saving…" : isLastStep ? "Complete Assessment" : "Next"}
         </Button>
       </div>
 
       {/* Step indicators */}
-      <div className="mt-8 flex justify-center gap-2">
+      <div className="mt-8 flex justify-center gap-1.5">
         {steps.map((step) => (
           <button
             key={step.id}
+            type="button"
             onClick={() => useWizardStore.getState().setCurrentStep(step.id)}
-            className={`h-2.5 w-2.5 rounded-full transition-colors ${
+            className={`h-2 w-2 rounded-full transition-colors ${
               step.id === currentStep
-                ? "bg-blue-600"
+                ? "bg-accent-primary ring-2 ring-accent-primary/30 ring-offset-2 ring-offset-background"
                 : step.id < currentStep
-                  ? "bg-blue-300"
-                  : "bg-gray-200"
+                  ? "bg-accent-primary/60 hover:bg-accent-primary/80"
+                  : "bg-muted-foreground/25 hover:bg-muted-foreground/40"
             }`}
             title={step.title}
+            aria-label={`Step ${step.id}: ${step.title}`}
           />
         ))}
       </div>

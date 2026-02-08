@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DashboardStats } from "@/components/dashboard/DashboardStats";
-import { AssessmentCard } from "@/components/dashboard/AssessmentCard";
+import { DashboardView } from "@/components/dashboard/DashboardView";
+import type { DashboardAssessment } from "@/components/dashboard/DashboardView";
 
 export const dynamic = "force-dynamic";
 
@@ -13,26 +13,50 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const assessments = await prisma.orgAssessment.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      products: true,
-      result: { select: { riskTier: true } },
-    },
-  });
+  let assessments: Awaited<ReturnType<typeof prisma.orgAssessment.findMany>>;
+  try {
+    assessments = await prisma.orgAssessment.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        products: true,
+        result: { select: { riskTier: true, riskScore: true } },
+      },
+    });
+  } catch (err) {
+    console.error("Dashboard failed to load assessments:", err);
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Assessments</h1>
+        </div>
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="py-10 text-center">
+            <p className="text-destructive font-medium">Failed to load assessments</p>
+            <p className="mt-1 text-muted-foreground text-sm">
+              Check your connection and try again. If the problem continues, check the server logs.
+            </p>
+            <form action="/dashboard" method="get" className="mt-4">
+              <Button type="submit" variant="outline" size="sm">
+                Retry
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  // Compute aggregate stats
   const totalAssessments = assessments.length;
   const completedAssessments = assessments.filter(
-    (a: any) => a.status === "COMPLETED"
+    (a) => a.status === "COMPLETED"
   ).length;
   const totalProducts = assessments.reduce(
-    (sum: number, a: any) => sum + a.products.length,
+    (sum, a) => sum + a.products.length,
     0
   );
   const riskDistribution = assessments.reduce(
-    (acc: Record<string, number>, a: any) => {
+    (acc: Record<string, number>, a) => {
       if (a.result?.riskTier) {
         acc[a.result.riskTier] = (acc[a.result.riskTier] ?? 0) + 1;
       }
@@ -41,48 +65,47 @@ export default async function DashboardPage() {
     {} as Record<string, number>
   );
 
+  const serializedAssessments: DashboardAssessment[] = assessments.map((a) => ({
+    id: a.id,
+    orgName: a.orgName,
+    answers: a.answers as Record<string, unknown> | null,
+    status: a.status,
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+    result: a.result ? { riskTier: a.result.riskTier, riskScore: a.result.riskScore } : null,
+    products: a.products.map((p) => ({
+      id: p.id,
+      projectName: p.projectName,
+      answers: p.answers as Record<string, unknown> | null,
+      status: p.status,
+    })),
+  }));
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">AI Governance Platform</h1>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Assessments</h1>
         <Link href="/org/new">
-          <Button>New Organization Assessment</Button>
+          <Button size="sm">New assessment</Button>
         </Link>
       </div>
 
-      {/* Stats */}
-      {assessments.length > 0 && (
-        <div className="mb-8">
-          <DashboardStats
-            totalAssessments={totalAssessments}
-            completedAssessments={completedAssessments}
-            totalProducts={totalProducts}
-            riskDistribution={riskDistribution}
-          />
-        </div>
-      )}
-
-      {/* Assessment List */}
       {assessments.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">
-              No assessments yet. Create your first organization assessment to
-              get started.
+        <Card className="border-border">
+          <CardContent className="py-10 text-center">
+            <p className="text-muted-foreground text-sm">
+              No assessments yet. Create your first organization assessment to get started.
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {assessments.map((assessment: any, index: number) => (
-            <AssessmentCard
-              key={assessment.id}
-              assessment={assessment}
-              index={index}
-            />
-          ))}
-        </div>
+        <DashboardView
+          assessments={serializedAssessments}
+          totalAssessments={totalAssessments}
+          completedAssessments={completedAssessments}
+          totalProducts={totalProducts}
+          riskDistribution={riskDistribution}
+        />
       )}
     </div>
   );

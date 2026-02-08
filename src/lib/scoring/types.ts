@@ -17,6 +17,9 @@ export interface OrgAnswers {
     orgName: string;
     orgSize: "1-50" | "51-500" | "501-5000" | "5000+";
     sector: string;
+    missionOrObjectives?: string;
+    goalsForAI?: string;
+    primaryBusinessContextForAI?: string;
     businessModel?: string;
   };
   step2?: {
@@ -49,6 +52,8 @@ export interface OrgAnswers {
     providers: string[];
     deployment: "on-prem" | "cloud" | "hybrid";
     thirdPartyComponents: boolean;
+    /** Primary infrastructure where AI workloads are hosted; used for cloud-specific control recommendations. */
+    primaryCloudInfrastructure?: "aws" | "azure" | "gcp" | "multi" | "on_prem_only" | "hybrid";
   };
   step8?: {
     securityProgram: boolean;
@@ -56,6 +61,7 @@ export interface OrgAnswers {
     modelInventory: boolean;
     incidentResponse: boolean;
     sdlcControls: boolean;
+    interdisciplinaryTeams?: "none" | "partial" | "yes";
   };
   step9?: {
     impactAssessments: "never" | "ad_hoc" | "systematic";
@@ -214,19 +220,97 @@ export interface ServiceCard {
   monitoringRequirements: string[];
 }
 
+/** Single implementation step with optional assignee. */
+export interface ImplementationStepItem {
+  step: string;
+  assignee?: string;
+}
+
+export type ImplementationTaskStatus = "pending" | "in_progress" | "completed" | "skipped";
+
+export interface ImplementationTask {
+  task: string;
+  status: ImplementationTaskStatus;
+  /** Optional assignee for the entire task (one per task). */
+  assignee?: string;
+  /** Implementation steps (with optional assignee per step). */
+  implementationSteps?: ImplementationStepItem[];
+  /** Evidence artifacts required (aligns with NIST mapping). */
+  evidence?: string[];
+  /** Control ID when this task is derived from a technical control. */
+  controlId?: string;
+  /** Cloud-specific service suggestions (only set when org is AWS or Azure). */
+  suggestedServices?: { provider: "aws" | "azure"; service: string; description?: string }[];
+}
+
 export interface ImplementationPhase {
   phase: string;
-  tasks: { task: string; status: "pending" | "in_progress" | "completed" }[];
+  tasks: ImplementationTask[];
 }
 
 export interface ComplianceRequirement {
   regulation: string;
   requirements: string[];
   applicability: string;
+  /** Short explanation of which assessment choices triggered this regulation to appear. */
+  triggerSummary?: string;
 }
 
 export interface MonitoringSpec {
   metrics: { name: string; threshold: string; alertCondition: string }[];
   dashboardSpec: string;
   environmentalTracking: { modelSize: string; inferenceVolume: string; estimatedFootprint: string };
+}
+
+// Canonical monitoring plan & runbook types (shared by compute, API, and UI)
+export interface MonitoringMetric {
+  name: string;
+  description: string;
+  target: string;
+  frequency: string;
+}
+
+/** A recommendation bullet: either plain string (legacy) or object with optional aiGenerated flag. */
+export type RecommendationBullet = string | { text: string; aiGenerated?: boolean };
+
+export interface MonitoringPlanData {
+  metrics: MonitoringMetric[];
+  cadence: string;
+  /** One-line alerting recommendation (e.g. PagerDuty vs email). Legacy: may be stored as `alerts` string. */
+  alertsSummary?: string;
+  /** Bullets shown in "Based on your assessment" (set by compute, preserved on PATCH). */
+  recommendationBullets?: RecommendationBullet[];
+}
+
+export interface RunbookAlert {
+  name: string;
+  condition: string;
+  severity: string;
+  action: string;
+}
+
+export interface RunbookIncidentTriage {
+  severity: string;
+  criteria: string;
+  responseTime: string;
+  owner: string;
+}
+
+export interface RunbookEscalationTrigger {
+  trigger: string;
+  escalateTo: string;
+  timeline: string;
+}
+
+export interface RunbookRole {
+  role: string;
+  responsibilities: string;
+}
+
+export interface OperationsRunbookData {
+  alerts: RunbookAlert[];
+  incidentTriage: RunbookIncidentTriage[];
+  escalationTriggers: RunbookEscalationTrigger[];
+  roles: RunbookRole[];
+  timelines: string[];
 }

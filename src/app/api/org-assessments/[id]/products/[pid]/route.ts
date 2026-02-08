@@ -41,12 +41,17 @@ export async function PATCH(
   const body = await request.json();
   const currentAnswers = (existing.answers as Record<string, unknown>) || {};
   const updatedAnswers = { ...currentAnswers, ...body.answers };
+  const step1 = updatedAnswers.step1 as { projectName?: string } | undefined;
+  const projectName =
+    body.projectName ??
+    (step1?.projectName && step1.projectName.trim() !== "" ? step1.projectName : undefined) ??
+    existing.projectName;
 
   const product = await prisma.productAssessment.update({
     where: { id: pid },
     data: {
       answers: updatedAnswers,
-      projectName: body.projectName || existing.projectName,
+      projectName,
     },
   });
 

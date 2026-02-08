@@ -41,7 +41,7 @@ interface EscalationStepProps {
 const levelColors: Record<number, string> = {
   1: "bg-yellow-100 text-yellow-800",
   2: "bg-orange-100 text-orange-800",
-  3: "bg-red-100 text-red-800",
+  3: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
 };
 
 export function EscalationStep({ blueprint }: EscalationStepProps) {
@@ -147,7 +147,7 @@ export function EscalationStep({ blueprint }: EscalationStepProps) {
                     ? "#eab308"
                     : esc.level === 2
                       ? "#f97316"
-                      : "#ef4444",
+                      : "#475569",
               }}
             >
               <div className="flex items-center gap-2">

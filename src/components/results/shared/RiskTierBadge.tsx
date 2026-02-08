@@ -16,7 +16,7 @@ const tierConfig = {
   },
   REGULATED: {
     label: "Regulated",
-    className: "bg-red-100 text-red-800 border-red-200",
+    className: "bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700",
   },
 } as const;
 

@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { SectionHeader } from "@/components/wizard/SectionHeader";
 
 type Step10Data = z.infer<typeof productStep10Schema>;
 
@@ -79,41 +80,40 @@ export default function Step10ComplianceApproval() {
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
-        <div>
-          <h3 className="text-sm font-medium mb-1">Compliance & Approval</h3>
-          <p className="text-sm text-muted-foreground">
-            Confirm which compliance and approval milestones have been completed
-            for this AI project.
-          </p>
-        </div>
-
-        <div className="grid gap-4">
-          {COMPLIANCE_FIELDS.map((complianceField) => (
-            <FormField
-              key={complianceField.name}
-              control={form.control}
-              name={complianceField.name}
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel>{complianceField.label}</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      {complianceField.description}
-                    </p>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-        </div>
+      <form className="space-y-8">
+        <p className="text-sm text-muted-foreground">
+          Compliance and approval inform GOVERN 1.1, MANAGE 1.1, MANAGE 1.3 and sign-off tracking.
+        </p>
+        <section className="space-y-4">
+          <SectionHeader
+            title="Compliance & approval"
+            description="Confirm which compliance and approval milestones have been completed for this AI project."
+            accentBorder
+          />
+          <div className="grid gap-3">
+            {COMPLIANCE_FIELDS.map((complianceField) => (
+              <FormField
+                key={complianceField.name}
+                control={form.control}
+                name={complianceField.name}
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel>{complianceField.label}</FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        {complianceField.description}
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
+        </section>
       </form>
     </Form>
   );

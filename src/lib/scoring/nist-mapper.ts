@@ -11,6 +11,9 @@ export interface NistMappingEntry {
   implementationSteps: string[];
   implementationLevel: string;
   controlType: string;
+  /** When set, show per-control callout e.g. "AWS: Amazon SageMaker Model Monitor". */
+  implementationVendor?: "aws" | "azure";
+  implementationService?: string;
 }
 
 interface ControlWithRefs {
@@ -22,6 +25,8 @@ interface ControlWithRefs {
   type: string;
   nistRefIds: string[];
   evidenceArtifacts: string[];
+  implementationVendor?: "aws" | "azure";
+  implementationService?: string;
 }
 
 export function mapToNist(
@@ -47,6 +52,8 @@ export function mapToNist(
         implementationSteps: control.implementationSteps,
         implementationLevel: control.implementationLevel,
         controlType: control.type,
+        implementationVendor: control.implementationVendor,
+        implementationService: control.implementationService,
       });
     }
   }

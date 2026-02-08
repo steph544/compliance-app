@@ -12,10 +12,10 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SelectableOptionTiles } from "@/components/wizard/SelectableOptionTiles";
 import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
 
 const TOLERANCE_OPTIONS = [
   {
@@ -67,54 +67,48 @@ export default function Step4RiskTolerance() {
   return (
     <Form {...form}>
       <form className="space-y-8">
+        <p className="text-sm text-muted-foreground">
+          Risk tolerance shapes control selection and governance rigor. Your answers inform NIST-aligned recommendations.
+        </p>
+        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2 mb-2">
+            Overall Risk Tolerance
+          </h3>
         <FormField
           control={form.control}
           name="overallTolerance"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Overall Risk Tolerance</FormLabel>
+              <FormDescription>
+                Drives governance and control recommendations; higher tolerance may allow more optional controls.
+              </FormDescription>
               <FormControl>
-                <RadioGroup
+                <SelectableOptionTiles
+                  options={TOLERANCE_OPTIONS.map((o) => ({
+                    value: o.value,
+                    label: o.label,
+                    description: o.description,
+                  }))}
                   value={field.value}
-                  onValueChange={field.onChange}
-                  className="grid gap-4 mt-2"
-                >
-                  {TOLERANCE_OPTIONS.map((option) => (
-                    <div
-                      key={option.value}
-                      className="flex items-start gap-3 rounded-lg border p-4"
-                    >
-                      <RadioGroupItem
-                        value={option.value}
-                        id={`tolerance-${option.value}`}
-                        className="mt-0.5"
-                      />
-                      <div className="grid gap-1">
-                        <Label
-                          htmlFor={`tolerance-${option.value}`}
-                          className="font-medium"
-                        >
-                          {option.label}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {option.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </RadioGroup>
+                  onChange={field.onChange}
+                  gridCols="3"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        </section>
 
-        <div className="space-y-6">
-          <h3 className="text-sm font-medium">Risk Category Tolerances</h3>
-          <p className="text-sm text-muted-foreground">
+        <section className="space-y-6 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
+            Risk Category Tolerances
+          </h3>
+          <FormDescription>
             Rate your tolerance for each risk category from 1 (very low) to 5 (very
-            high).
-          </p>
+            high). Used to refine risk scoring and control prioritization.
+          </FormDescription>
 
           {SLIDER_FIELDS.map((sliderField) => (
             <FormField
@@ -143,7 +137,7 @@ export default function Step4RiskTolerance() {
               )}
             />
           ))}
-        </div>
+        </section>
       </form>
     </Form>
   );

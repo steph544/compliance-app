@@ -13,11 +13,14 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { SectionHeader } from "@/components/wizard/SectionHeader";
+import { cn } from "@/lib/utils";
 
 type Step3Data = z.infer<typeof productStep3Schema>;
 
@@ -67,147 +70,171 @@ export default function Step3AISystemDetails() {
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
-        <FormField
-          control={form.control}
-          name="aiType"
-          render={() => (
-            <FormItem>
-              <FormLabel>AI Type</FormLabel>
-              <p className="text-sm text-muted-foreground">
-                Select all AI types that apply to this project.
-              </p>
-              <div className="grid gap-4 mt-2">
-                {AI_TYPES.map((type) => (
-                  <FormField
-                    key={type.value}
-                    control={form.control}
-                    name="aiType"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center gap-3 rounded-lg border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(type.value)}
-                            onCheckedChange={(checked) => {
-                              const current = field.value ?? [];
-                              if (checked) {
-                                field.onChange([...current, type.value]);
-                              } else {
-                                field.onChange(
-                                  current.filter((v: string) => v !== type.value)
-                                );
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <Label className="font-normal">{type.label}</Label>
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="modelSource"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Model Source</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  className="grid gap-3"
-                >
-                  {MODEL_SOURCES.map((source) => (
-                    <div key={source.value} className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value={source.value}
-                        id={`modelSource-${source.value}`}
-                      />
-                      <Label htmlFor={`modelSource-${source.value}`}>
-                        {source.label}
-                      </Label>
-                    </div>
+      <form className="space-y-8">
+        <p className="text-sm text-muted-foreground">
+          System details inform MAP 2.1, MAP 2.2 and control recommendations for this product.
+        </p>
+        <section className="space-y-5">
+          <SectionHeader
+            title="AI type"
+            description="Select all AI types that apply to this project."
+            accentBorder
+          />
+          <FormField
+            control={form.control}
+            name="aiType"
+            render={() => (
+              <FormItem>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {AI_TYPES.map((type) => (
+                    <FormField
+                      key={type.value}
+                      control={form.control}
+                      name="aiType"
+                      render={({ field }) => (
+                        <FormItem
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg border-2 px-4 py-3 transition-colors",
+                            field.value?.includes(type.value)
+                              ? "border-primary bg-primary/5"
+                              : "border-border bg-muted/20"
+                          )}
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(type.value)}
+                              onCheckedChange={(checked) => {
+                                const current = field.value ?? [];
+                                if (checked) {
+                                  field.onChange([...current, type.value]);
+                                } else {
+                                  field.onChange(current.filter((v: string) => v !== type.value));
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <Label className="cursor-pointer font-normal">{type.label}</Label>
+                        </FormItem>
+                      )}
+                    />
                   ))}
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
 
-        <FormField
-          control={form.control}
-          name="specificModels"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Specific Models (comma-separated)</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g. GPT-4, Claude, Llama 2"
-                  value={(field.value ?? []).join(", ")}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    field.onChange(
-                      val
-                        ? val.split(",").map((s) => s.trim()).filter(Boolean)
-                        : []
-                    );
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="trainingDataSource"
-          render={() => (
-            <FormItem>
-              <FormLabel>Training Data Source</FormLabel>
-              <p className="text-sm text-muted-foreground">
-                Select all training data sources that apply.
-              </p>
-              <div className="grid gap-4 mt-2">
-                {TRAINING_DATA_SOURCES.map((source) => (
-                  <FormField
-                    key={source.value}
-                    control={form.control}
-                    name="trainingDataSource"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center gap-3 rounded-lg border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(source.value)}
-                            onCheckedChange={(checked) => {
-                              const current = field.value ?? [];
-                              if (checked) {
-                                field.onChange([...current, source.value]);
-                              } else {
-                                field.onChange(
-                                  current.filter((v: string) => v !== source.value)
-                                );
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <Label className="font-normal">{source.label}</Label>
-                      </FormItem>
-                    )}
+        <section className="space-y-5">
+          <SectionHeader
+            title="Model source"
+            description="How you obtain or build the model."
+          />
+          <FormField
+            control={form.control}
+            name="modelSource"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    className="grid gap-2 sm:grid-cols-2"
+                  >
+                    {MODEL_SOURCES.map((source) => (
+                      <Label
+                        key={source.value}
+                        htmlFor={`modelSource-${source.value}`}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2 rounded-lg border-2 px-4 py-3 transition-colors hover:border-muted-foreground/40",
+                          field.value === source.value ? "border-primary bg-primary/5" : "border-border bg-muted/20"
+                        )}
+                      >
+                        <RadioGroupItem value={source.value} id={`modelSource-${source.value}`} />
+                        <span className="font-medium text-foreground">{source.label}</span>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="specificModels"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Specific models</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g. GPT-4, Claude, Llama 2 (comma-separated)"
+                    value={(field.value ?? []).join(", ")}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      field.onChange(
+                        val ? val.split(",").map((s) => s.trim()).filter(Boolean) : []
+                      );
+                    }}
                   />
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
+
+        <section className="space-y-5">
+          <SectionHeader
+            title="Training data sources"
+            description="Select all training data sources that apply."
+          />
+          <FormField
+            control={form.control}
+            name="trainingDataSource"
+            render={() => (
+              <FormItem>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {TRAINING_DATA_SOURCES.map((source) => (
+                    <FormField
+                      key={source.value}
+                      control={form.control}
+                      name="trainingDataSource"
+                      render={({ field }) => (
+                        <FormItem
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg border-2 px-4 py-3 transition-colors",
+                            field.value?.includes(source.value)
+                              ? "border-primary bg-primary/5"
+                              : "border-border bg-muted/20"
+                          )}
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(source.value)}
+                              onCheckedChange={(checked) => {
+                                const current = field.value ?? [];
+                                if (checked) {
+                                  field.onChange([...current, source.value]);
+                                } else {
+                                  field.onChange(
+                                    current.filter((v: string) => v !== source.value)
+                                  );
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <Label className="cursor-pointer font-normal">{source.label}</Label>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
       </form>
     </Form>
   );

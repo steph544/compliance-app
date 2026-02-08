@@ -1,135 +1,191 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AnimatedCard } from "@/components/animation/AnimatedCard";
-import { StaggeredList, StaggeredItem } from "@/components/animation/StaggeredList";
-import { RISK_TIER_COLORS } from "@/components/charts/chart-colors";
-
-function riskTierColor(tier: string) {
-  switch (tier) {
-    case "LOW":
-      return "bg-green-100 text-green-800";
-    case "MEDIUM":
-      return "bg-yellow-100 text-yellow-800";
-    case "HIGH":
-      return "bg-red-100 text-red-800";
-    case "REGULATED":
-      return "bg-purple-100 text-purple-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
-
-function statusColor(status: string) {
-  switch (status) {
-    case "COMPLETED":
-      return "bg-blue-100 text-blue-800";
-    case "IN_PROGRESS":
-      return "bg-amber-100 text-amber-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
+import { StatusIndicator } from "@/components/ui/status-indicator";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Trash2, Pencil } from "lucide-react";
 
 interface AssessmentCardProps {
   assessment: {
     id: string;
     orgName: string;
+    answers?: Record<string, unknown> | null;
     status: string;
     createdAt: Date;
     result?: { riskTier: string } | null;
     products: Array<{
       id: string;
       projectName: string;
+      answers?: Record<string, unknown> | null;
       status: string;
     }>;
   };
-  index: number;
 }
 
-export function AssessmentCard({ assessment, index }: AssessmentCardProps) {
+function displayOrgName(assessment: AssessmentCardProps["assessment"]): string {
+  const step1 = assessment.answers?.step1 as { orgName?: string } | undefined;
+  const name = step1?.orgName?.trim();
+  return name || assessment.orgName;
+}
+
+function displayProjectName(product: { projectName: string; answers?: Record<string, unknown> | null }): string {
+  const step1 = product.answers?.step1 as { projectName?: string } | undefined;
+  const name = step1?.projectName?.trim();
+  return name || product.projectName;
+}
+
+export function AssessmentCard({ assessment }: AssessmentCardProps) {
+  const router = useRouter();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const href =
     assessment.status === "COMPLETED"
       ? `/org/${assessment.id}/results`
       : `/org/${assessment.id}/wizard`;
 
   const riskTier = assessment.result?.riskTier;
+  const title = displayOrgName(assessment);
+
+  function openDeleteModal(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleteOpen(true);
+  }
+
+  async function confirmDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/org-assessments/${assessment.id}`, { method: "DELETE" });
+      if (!res.ok) return;
+      setDeleteOpen(false);
+      router.refresh();
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
-    <AnimatedCard
-      delay={index * 0.06}
-      accentColor={riskTier ? RISK_TIER_COLORS[riskTier] ?? "#94a3b8" : undefined}
-    >
-      <Link href={href}>
-        <CardHeader className="pb-3 hover:bg-muted/50 transition-colors rounded-t-xl">
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-lg">{assessment.orgName}</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Created{" "}
-                {new Date(assessment.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="secondary"
-                className={statusColor(assessment.status)}
-              >
-                {assessment.status.replace("_", " ")}
-              </Badge>
-              {riskTier && (
-                <Badge
-                  variant="secondary"
-                  className={riskTierColor(riskTier)}
-                >
-                  {riskTier} RISK
-                </Badge>
-              )}
-            </div>
+    <Card className="border-border overflow-hidden">
+      <CardHeader className="py-4 px-4 pb-3 transition-colors rounded-t-xl">
+        <div className="flex items-start justify-between gap-4">
+          <Link href={href} className="min-w-0 flex-1 hover:bg-muted/50 -m-2 p-2 rounded-lg">
+            <CardTitle className="text-base font-medium">{title}</CardTitle>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(assessment.createdAt).toLocaleDateString()}
+              {" · "}
+              {assessment.products.length} product{assessment.products.length !== 1 ? "s" : ""}
+            </p>
+          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <StatusIndicator
+              variant={{ type: "assessmentStatus", value: assessment.status }}
+            />
+            {riskTier && (
+              <StatusIndicator
+                variant={{
+                  type: "riskTier",
+                  value: riskTier as "LOW" | "MEDIUM" | "HIGH" | "REGULATED",
+                }}
+              />
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              aria-label="Delete assessment"
+              onClick={openDeleteModal}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {assessment.products.length} product
-            {assessment.products.length !== 1 ? "s" : ""}
-          </p>
-        </CardHeader>
-      </Link>
+        </div>
+      </CardHeader>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-md border-border" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Delete assessment</DialogTitle>
+            <DialogDescription>
+              This will permanently delete this assessment and all its products and results. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Product sub-cards */}
       {assessment.products.length > 0 && (
-        <CardContent className="border-t bg-muted/30 pt-4">
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Product Assessments
+        <CardContent className="border-t border-border bg-muted/30 pt-3">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Product assessments
           </p>
-          <StaggeredList className="space-y-2">
+          <div className="space-y-1.5">
             {assessment.products.map((product) => {
-              const productHref =
+              const viewHref =
                 product.status === "COMPLETED"
                   ? `/org/${assessment.id}/product/${product.id}/results`
                   : `/org/${assessment.id}/product/${product.id}/wizard`;
+              const editHref = `/org/${assessment.id}/product/${product.id}/wizard`;
 
               return (
-                <StaggeredItem key={product.id}>
-                  <Link href={productHref}>
-                    <div className="flex items-center justify-between rounded-lg border bg-card px-4 py-3 transition-all hover:bg-muted/50 hover:shadow-sm">
-                      <span className="text-sm font-medium">
-                        {product.projectName}
-                      </span>
-                      <Badge
-                        variant="secondary"
-                        className={statusColor(product.status)}
-                      >
-                        {product.status.replace("_", " ")}
-                      </Badge>
-                    </div>
+                <div
+                  key={product.id}
+                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 transition-colors hover:bg-muted/50"
+                >
+                  <Link href={viewHref} className="min-w-0 flex-1 flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">
+                      {displayProjectName(product)}
+                    </span>
+                    <StatusIndicator
+                      variant={{ type: "assessmentStatus", value: product.status }}
+                    />
                   </Link>
-                </StaggeredItem>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                    aria-label="Edit product assessment"
+                    asChild
+                  >
+                    <Link href={editHref}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </div>
               );
             })}
-          </StaggeredList>
+          </div>
         </CardContent>
       )}
-    </AnimatedCard>
+    </Card>
   );
 }

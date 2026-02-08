@@ -246,6 +246,158 @@ export const controlsSeedData: ControlSeed[] = [
       "Updated AI system inventory entries",
     ],
   },
+  {
+    controlId: "CTL-GOV-011",
+    name: "AI Risk Management Training",
+    description:
+      "Ensure personnel and partners receive training on AI risk management so they can perform their duties consistent with policies, procedures, and agreements.",
+    type: "PROCESS",
+    scope: "ORG",
+    riskTags: ["oversight", "accountability"],
+    nistRefIds: ["GOVERN-2.2"],
+    implementationLevel: "BASELINE",
+    implementationSteps: [
+      "Develop an AI risk management training curriculum covering organizational policies, Map-Measure-Manage concepts, and role-specific responsibilities.",
+      "Identify all roles that require training, including developers, operators, risk owners, and third-party partners with access to AI systems.",
+      "Deliver training at onboarding and on a recurring basis (e.g. annually); track completion and comprehension.",
+      "Update training when policies or AI systems change significantly; document training materials and attendance.",
+    ],
+    evidenceArtifacts: [
+      "AI risk management training curriculum and materials",
+      "Training completion and attendance records",
+      "Role-to-training mapping",
+    ],
+  },
+  {
+    controlId: "CTL-GOV-012",
+    name: "Executive AI Risk Accountability",
+    description:
+      "Ensure executive leadership takes responsibility for decisions about risks associated with AI system development and deployment.",
+    type: "PROCESS",
+    scope: "ORG",
+    riskTags: ["oversight", "accountability"],
+    nistRefIds: ["GOVERN-2.3"],
+    implementationLevel: "BASELINE",
+    implementationSteps: [
+      "Assign named executive accountability for AI risk at the organization or business unit level.",
+      "Define escalation paths so that high-risk AI decisions reach the accountable executive for approval or awareness.",
+      "Include AI risk and governance metrics in executive reporting and board or leadership reviews.",
+      "Document key AI risk decisions and the rationale, including executive sign-off where required.",
+    ],
+    evidenceArtifacts: [
+      "Executive accountability assignment and escalation matrix",
+      "AI risk reporting to leadership",
+      "Records of executive-level AI risk decisions and sign-offs",
+    ],
+  },
+  {
+    controlId: "CTL-GOV-013",
+    name: "Red-Teaming & Safety-First Culture",
+    description:
+      "Foster a critical thinking and safety-first mindset in the design, development, and deployment of AI systems, including red-teaming exercises.",
+    type: "PROCESS",
+    scope: "ORG",
+    riskTags: ["safety", "security"],
+    nistRefIds: ["GOVERN-4.1"],
+    implementationLevel: "ENHANCED",
+    implementationSteps: [
+      "Establish organizational policies that encourage questioning assumptions and anticipating failure modes before deployment.",
+      "Define when red-team or adversarial testing is required (e.g. for high-risk or customer-facing AI) and how often it is conducted.",
+      "Conduct red-team exercises that simulate misuse, prompt injection, and edge cases; document findings and remediation.",
+      "Integrate safety reviews and red-team outcomes into go/no-go and release decisions.",
+    ],
+    evidenceArtifacts: [
+      "Policy or guidance on safety-first design and red-teaming",
+      "Red-team exercise reports and remediation logs",
+      "Evidence of safety outcomes in release decisions",
+    ],
+  },
+  {
+    controlId: "CTL-GOV-014",
+    name: "AI Impact Assessments (Direct, Indirect, Cumulative)",
+    description:
+      "Document and conduct impact assessments that include the direct, indirect, and cumulative effects of AI systems on individuals, communities, and the environment.",
+    type: "PROCESS",
+    scope: "ORG",
+    riskTags: ["fairness", "safety"],
+    nistRefIds: ["GOVERN-4.2"],
+    implementationLevel: "ENHANCED",
+    implementationSteps: [
+      "Define an impact assessment template that explicitly covers direct effects on users, indirect effects on communities and ecosystems, and cumulative effects over time.",
+      "Require impact assessments for new or materially changed AI systems before deployment; update when use or scale changes significantly.",
+      "Involve diverse perspectives (e.g. domain experts, affected communities) in assessing indirect and cumulative impacts.",
+      "Document findings, uncertainties, and mitigation plans; link to risk treatment and monitoring plans.",
+    ],
+    evidenceArtifacts: [
+      "Impact assessment reports (direct, indirect, cumulative)",
+      "Stakeholder input and review records",
+      "Linkage to risk treatment and monitoring",
+    ],
+  },
+  {
+    controlId: "CTL-GOV-015",
+    name: "External Stakeholder Feedback",
+    description:
+      "Establish policies and practices to collect, consider, prioritize, and integrate feedback from those external to the team that developed or deployed the AI system.",
+    type: "PROCESS",
+    scope: "ORG",
+    riskTags: ["fairness", "oversight"],
+    nistRefIds: ["GOVERN-5.1"],
+    implementationLevel: "ENHANCED",
+    implementationSteps: [
+      "Define channels and cadence for collecting feedback from end users, affected communities, and external stakeholders.",
+      "Establish a process to triage, prioritize, and route feedback to product, risk, and governance owners.",
+      "Document how feedback is integrated into system design, risk treatment, or policy updates; close the loop with stakeholders where appropriate.",
+      "Review feedback trends in governance and risk committees on a regular basis.",
+    ],
+    evidenceArtifacts: [
+      "Feedback collection and triage process documentation",
+      "Feedback logs and integration records",
+      "Governance review of feedback trends",
+    ],
+  },
+  {
+    controlId: "CTL-GOV-016",
+    name: "Third-Party AI Contingency",
+    description:
+      "Establish contingency processes for addressing third-party AI system failures or incidents, including performance degradation, security breaches, and supply chain disruptions.",
+    type: "PROCESS",
+    scope: "ORG",
+    riskTags: ["security", "oversight"],
+    nistRefIds: ["GOVERN-6.2"],
+    implementationLevel: "BASELINE",
+    implementationSteps: [
+      "Document contingency plans for each critical third-party AI dependency (e.g. model APIs, data providers), including fallback, degradation, and exit strategies.",
+      "Define triggers for invoking contingency (e.g. prolonged outage, security incident, contract termination) and roles responsible for execution.",
+      "Test contingency procedures periodically (e.g. tabletop or failover drills) and update based on lessons learned.",
+      "Ensure contracts with third-party AI vendors address incident notification, data return, and transition support.",
+    ],
+    evidenceArtifacts: [
+      "Third-party AI contingency plans per dependency",
+      "Contingency test or drill reports",
+      "Contract clauses and incident notification procedures",
+    ],
+  },
+  {
+    controlId: "CTL-GOV-017",
+    name: "Interdisciplinary Teams for AI Context",
+    description:
+      "Ensure AI context mapping and risk management are informed by interdisciplinary teams with demographic diversity and broad domain and user experience expertise, per NIST AI RMF MAP 1.2.",
+    type: "PROCESS",
+    scope: "ORG",
+    riskTags: ["oversight", "fairness"],
+    nistRefIds: ["MAP-1.2"],
+    implementationLevel: "ENHANCED",
+    implementationSteps: [
+      "Establish or designate interdisciplinary teams for AI design and risk management that include demographic diversity and broad domain expertise (e.g. legal, ethics, domain, user experience).",
+      "Document team composition and how diverse perspectives are incorporated into context mapping and go/no-go decisions.",
+      "Create opportunities for interdisciplinary collaboration and critical inquiry throughout the AI lifecycle.",
+    ],
+    evidenceArtifacts: [
+      "Documentation of AI team composition and diversity",
+      "Records of interdisciplinary input into risk assessments and context mapping",
+    ],
+  },
 
   // ---------------------------------------------------------------------------
   // BOTH-scope Controls (CTL-MAP-001 through CTL-MAN-008)
@@ -383,6 +535,28 @@ export const controlsSeedData: ControlSeed[] = [
       "AI system context document for each system",
       "Version history of context documentation updates",
       "Cross-references in risk assessments and model cards",
+    ],
+  },
+  {
+    controlId: "CTL-MAP-007",
+    name: "AI Risk Identification & Documentation",
+    description:
+      "Apply approaches for identifying AI risks to each trustworthy characteristic and document risks across the lifecycle, including internal risk controls and their adequacy.",
+    type: "PROCESS",
+    scope: "BOTH",
+    riskTags: ["auditability", "oversight"],
+    nistRefIds: ["MAP-4.1", "MAP-4.2"],
+    implementationLevel: "BASELINE",
+    implementationSteps: [
+      "Apply a risk identification approach (e.g. by trustworthy characteristic: validity, safety, security, fairness, privacy, explainability) to each AI system.",
+      "Document identified risks across the lifecycle (data, design, development, deployment, operation, decommissioning) in a risk register.",
+      "Assess internal risk controls (technical, procedural, organizational) for each identified risk and document adequacy and gaps.",
+      "Review and update the risk register when the system or context changes; link to risk treatment and monitoring plans.",
+    ],
+    evidenceArtifacts: [
+      "AI risk register with risks by trustworthy characteristic and lifecycle stage",
+      "Assessment of internal risk controls and adequacy",
+      "Linkage to risk treatment and monitoring",
     ],
   },
   {
@@ -546,6 +720,50 @@ export const controlsSeedData: ControlSeed[] = [
       "Evaluation results report with comparison data",
       "Risk owner sign-off for model integration",
       "Re-evaluation records for model version updates",
+    ],
+  },
+  {
+    controlId: "CTL-MEA-008",
+    name: "Environmental Impact Assessment",
+    description:
+      "Assess and document the environmental impact of the AI system, including energy consumption, carbon footprint, and resource utilization during training and operation.",
+    type: "PROCESS",
+    scope: "BOTH",
+    riskTags: ["auditability"],
+    nistRefIds: ["MEASURE-2.10"],
+    implementationLevel: "ENHANCED",
+    implementationSteps: [
+      "Define metrics for energy consumption, carbon footprint, and resource utilization relevant to the AI system (training, inference, data center).",
+      "Collect or estimate environmental impact data for the system; document methodology and assumptions.",
+      "Document findings and any targets or reduction plans; integrate into design decisions where feasible (e.g. model selection, hosting region).",
+      "Review environmental impact when scaling or significantly changing the system.",
+    ],
+    evidenceArtifacts: [
+      "Environmental impact assessment report",
+      "Methodology and data sources",
+      "Targets or reduction plans if applicable",
+    ],
+  },
+  {
+    controlId: "CTL-MEA-009",
+    name: "Post-Deployment Feedback Collection",
+    description:
+      "Collect feedback on AI system performance and risks from end users and affected communities after deployment and integrate results into ongoing risk management.",
+    type: "PROCESS",
+    scope: "BOTH",
+    riskTags: ["fairness", "oversight"],
+    nistRefIds: ["MEASURE-4.1"],
+    implementationLevel: "ENHANCED",
+    implementationSteps: [
+      "Establish channels for collecting structured and unstructured feedback from end users and affected communities (e.g. surveys, support tickets, community forums).",
+      "Define a process to triage feedback, classify by risk or performance dimension, and route to product and risk owners.",
+      "Integrate feedback into risk assessments, model improvements, and governance reporting; document how feedback influenced decisions.",
+      "Report feedback trends and actions taken to the governance committee on a regular cadence.",
+    ],
+    evidenceArtifacts: [
+      "Feedback collection channels and process documentation",
+      "Feedback triage and integration records",
+      "Governance reports on feedback trends and actions",
     ],
   },
   {
@@ -732,6 +950,51 @@ export const controlsSeedData: ControlSeed[] = [
       "Log infrastructure configuration records",
       "Sample audit trail exports demonstrating completeness",
       "Log integrity and tamper-evidence verification records",
+    ],
+  },
+  {
+    controlId: "CTL-MAN-009",
+    name: "Risk Treatment Prioritization",
+    description:
+      "Prioritize treatment of identified AI risks based on assessed impact, likelihood, available resources, and the organization's risk tolerance.",
+    type: "PROCESS",
+    scope: "BOTH",
+    riskTags: ["oversight"],
+    nistRefIds: ["MANAGE-1.2"],
+    implementationLevel: "BASELINE",
+    implementationSteps: [
+      "Define prioritization criteria that consider impact, likelihood, resource constraints, and organizational risk tolerance.",
+      "Apply prioritization to all identified AI risks in the risk register; document the prioritization rationale and ranking.",
+      "Allocate resources and timelines to high-priority risks first; document accepted residual risk for lower-priority items.",
+      "Re-prioritize when new risks emerge, resources change, or risk tolerance is updated.",
+    ],
+    evidenceArtifacts: [
+      "Prioritization criteria and methodology",
+      "Prioritized risk register with rationale",
+      "Resource allocation and residual risk acceptance records",
+    ],
+  },
+  {
+    controlId: "CTL-MAN-010",
+    name: "Incident Tracking & Communication",
+    description:
+      "Track incidents and errors related to AI systems, communicate them to relevant stakeholders, and analyze to prevent recurrence and improve system performance.",
+    type: "PROCESS",
+    scope: "BOTH",
+    riskTags: ["safety", "auditability"],
+    nistRefIds: ["MANAGE-4.3"],
+    implementationLevel: "BASELINE",
+    implementationSteps: [
+      "Establish a central incident and error tracking system for AI-related events (failures, safety events, bias incidents, security issues).",
+      "Define severity levels, communication templates, and stakeholder notification requirements for different incident types.",
+      "Conduct root cause analysis for significant incidents and document corrective and preventive actions.",
+      "Share lessons learned and trend analyses with product teams and governance; update controls and training as needed.",
+    ],
+    evidenceArtifacts: [
+      "Incident and error tracking system and logs",
+      "Stakeholder communication records",
+      "Root cause analyses and corrective action reports",
+      "Lessons learned and trend reports",
     ],
   },
 

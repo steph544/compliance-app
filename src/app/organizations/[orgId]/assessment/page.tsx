@@ -62,24 +62,46 @@ export default function OrganizationAssessmentPage() {
   const router = useRouter();
   const { getOrganization, getOrganizationAssessment, saveOrganizationAssessment } = useData();
 
-  const org = getOrganization(orgId);
-  const existing = getOrganizationAssessment(orgId);
-
+  const [org, setOrg] = useState<{ id: string; name: string } | null | undefined>(undefined);
   const [govern, setGovern] = useState(defaultGovern);
   const [playbook, setPlaybook] = useState(defaultPlaybook);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    if (existing) {
-      setGovern(existing.govern);
-      setPlaybook(existing.playbook);
-    }
-  }, [existing?.id]);
+    let cancelled = false;
+    getOrganization(orgId).then((o) => {
+      if (!cancelled) setOrg(o ?? null);
+    });
+    getOrganizationAssessment(orgId).then((existing) => {
+      if (!cancelled && existing) {
+        setGovern(existing.govern);
+        setPlaybook(existing.playbook);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, getOrganization, getOrganizationAssessment]);
 
-  function handleSave() {
-    saveOrganizationAssessment(orgId, { govern, playbook });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave() {
+    setSaveError("");
+    try {
+      await saveOrganizationAssessment(orgId, { govern, playbook });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save.");
+    }
+  }
+
+  if (org === undefined) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <PageHeader title="Loading…" backHref="/" />
+        <p className="text-zinc-500 mt-4">Loading…</p>
+      </div>
+    );
   }
 
   if (!org) {
@@ -296,13 +318,16 @@ export default function OrganizationAssessmentPage() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             className="rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-4 py-2 text-sm font-medium hover:opacity-90"
           >
             Save assessment
           </button>
           {saved && (
             <span className="text-sm text-green-600 dark:text-green-400">Saved.</span>
+          )}
+          {saveError && (
+            <span className="text-sm text-destructive">{saveError}</span>
           )}
           <button
             type="button"

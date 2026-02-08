@@ -7,6 +7,8 @@ interface RiskGaugeProps {
   score: number;
   tier?: string;
   size?: "sm" | "md" | "lg";
+  /** Max score for the scale (e.g. 25 for org/product risk, 100 for 0-100). Default 100. */
+  max?: number;
 }
 
 const sizeMap = {
@@ -15,14 +17,14 @@ const sizeMap = {
   lg: { width: 200, height: 200, inner: 62, outer: 82, fontSize: "text-4xl" },
 };
 
-export function RiskGauge({ score, tier, size = "md" }: RiskGaugeProps) {
-  const clampedScore = Math.max(0, Math.min(100, score));
+export function RiskGauge({ score, tier, size = "md", max = 100 }: RiskGaugeProps) {
+  const clampedScore = Math.max(0, Math.min(max, score));
   const config = sizeMap[size];
   const fillColor = tier ? RISK_TIER_COLORS[tier] ?? "#6366f1" : "#6366f1";
 
   const data = [
     { name: "score", value: clampedScore },
-    { name: "remainder", value: 100 - clampedScore },
+    { name: "remainder", value: max - clampedScore },
   ];
 
   return (
@@ -55,7 +57,7 @@ export function RiskGauge({ score, tier, size = "md" }: RiskGaugeProps) {
         <span className={`${config.fontSize} font-bold tabular-nums`}>
           {clampedScore}
         </span>
-        <span className="text-xs text-muted-foreground">/ 100</span>
+        <span className="text-xs text-muted-foreground">/ {max}</span>
       </div>
     </div>
   );

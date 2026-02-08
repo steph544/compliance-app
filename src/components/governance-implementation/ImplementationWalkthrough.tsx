@@ -142,8 +142,8 @@ export function ImplementationWalkthrough({
       <div>
         <h1 className="text-3xl font-bold">Governance Implementation</h1>
         <p className="text-muted-foreground mt-1">
-          Walk through each section of your governance blueprint and assign real
-          people, dates, and implementation details.
+          Each step shows recommended actions from your assessment; assign people
+          and dates in the forms below.
         </p>
       </div>
 

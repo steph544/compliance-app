@@ -99,7 +99,7 @@ function RaciCell({ value, type }: { value: string; type: string }) {
 const escalationColors: Record<number, string> = {
   1: "#eab308",
   2: "#f97316",
-  3: "#ef4444",
+  3: "#475569",
 };
 
 export function GovernanceBlueprint({ blueprint }: GovernanceBlueprintProps) {

@@ -2,10 +2,11 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useWizardStore } from "@/lib/wizard/wizard-store";
 import { productStep8Schema } from "@/lib/wizard/product-schema";
+import { getBaselineSuggestions } from "@/lib/wizard/baseline-suggestions";
 import {
   Form,
   FormField,
@@ -18,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SectionHeader } from "@/components/wizard/SectionHeader";
+import { Sparkles } from "lucide-react";
 
 type Step8Data = z.infer<typeof productStep8Schema>;
 
@@ -65,6 +68,30 @@ export default function Step8BaselineMetrics() {
     return () => subscription.unsubscribe();
   }, [form, setStepAnswers]);
 
+  const { suggestedMetrics, suggestedConstraints } = useMemo(
+    () => getBaselineSuggestions(answers),
+    [answers]
+  );
+
+  const addedMetricNames = useMemo(() => new Set(metrics.map((m) => m.name)), [metrics]);
+  const addedConstraintMetrics = useMemo(() => new Set(constraints.map((c) => c.metric)), [constraints]);
+  const suggestedMetricsToShow = useMemo(
+    () => suggestedMetrics.filter((m) => !addedMetricNames.has(m.name)),
+    [suggestedMetrics, addedMetricNames]
+  );
+  const suggestedConstraintsToShow = useMemo(
+    () => suggestedConstraints.filter((c) => !addedConstraintMetrics.has(c.metric)),
+    [suggestedConstraints, addedConstraintMetrics]
+  );
+
+  const addSuggestedMetric = (m: { name: string; currentValue: string; target: string; mustHave: boolean }) => {
+    setMetrics([...metrics, { name: m.name, currentValue: m.currentValue, target: m.target, mustHave: m.mustHave }]);
+  };
+
+  const addSuggestedConstraint = (c: { metric: string; threshold: string; owner: string }) => {
+    setConstraints([...constraints, { metric: c.metric, threshold: c.threshold, owner: c.owner }]);
+  };
+
   const addMetric = () => {
     setMetrics([
       ...metrics,
@@ -110,21 +137,79 @@ export default function Step8BaselineMetrics() {
   return (
     <Form {...form}>
       <form className="space-y-8">
-        {/* Baseline Metrics */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium mb-1">Baseline Metrics</h3>
-            <p className="text-sm text-muted-foreground">
-              Define the key performance metrics and success criteria for this
-              AI project.
-            </p>
+        <p className="text-sm text-muted-foreground">
+          Baseline metrics and success criteria inform MAP 1.4, MAP 3.1, MANAGE 1.1, MEASURE 1.1.
+        </p>
+        {(suggestedMetricsToShow.length > 0 || suggestedConstraintsToShow.length > 0) && (
+        <section className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">AI suggestions</h3>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Based on your project type, impact, and risks from earlier steps. Add any that apply — they will move below.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground">Suggested metrics</Label>
+              <div className="flex flex-wrap gap-2">
+                {suggestedMetricsToShow.map((m) => (
+                  <div key={m.name} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+                    <div className="font-medium text-foreground">{m.name}</div>
+                    {m.reason && <div className="mt-0.5 text-xs text-muted-foreground">{m.reason}</div>}
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Target: {m.target}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-xs"
+                        onClick={() => addSuggestedMetric(m)}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground">Suggested RAI constraints</Label>
+              <div className="flex flex-wrap gap-2">
+                {suggestedConstraintsToShow.map((c) => (
+                  <div key={c.metric} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+                    <div className="font-medium text-foreground">{c.metric}</div>
+                    {c.reason && <div className="mt-0.5 text-xs text-muted-foreground">{c.reason}</div>}
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{c.threshold}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-xs"
+                        onClick={() => addSuggestedConstraint(c)}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+        )}
 
+        <section className="space-y-4">
+          <SectionHeader
+            title="Baseline metrics"
+            description="Define the key performance metrics and success criteria for this AI project."
+          />
           <div className="grid gap-4">
             {metrics.map((metric, index) => (
               <div
                 key={index}
-                className="rounded-lg border p-4 space-y-3"
+                className="rounded-lg border border-border bg-muted/20 p-4 space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">
@@ -192,28 +277,21 @@ export default function Step8BaselineMetrics() {
             ))}
           </div>
 
-          <Button type="button" variant="outline" onClick={addMetric}>
-            + Add Metric
+          <Button type="button" variant="outline" size="sm" onClick={addMetric}>
+            + Add metric
           </Button>
-        </div>
+        </section>
 
-        {/* RAI Constraints */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium mb-1">
-              Responsible AI Constraints
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Define responsible AI constraints that must be met before
-              deployment.
-            </p>
-          </div>
-
+        <section className="space-y-4">
+          <SectionHeader
+            title="Responsible AI constraints"
+            description="Define responsible AI constraints that must be met before deployment."
+          />
           <div className="grid gap-4">
             {constraints.map((constraint, index) => (
               <div
                 key={index}
-                className="rounded-lg border p-4 space-y-3"
+                className="rounded-lg border border-border bg-muted/20 p-4 space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">
@@ -270,10 +348,10 @@ export default function Step8BaselineMetrics() {
             ))}
           </div>
 
-          <Button type="button" variant="outline" onClick={addConstraint}>
-            + Add Constraint
+          <Button type="button" variant="outline" size="sm" onClick={addConstraint}>
+            + Add constraint
           </Button>
-        </div>
+        </section>
 
         <FormField
           control={form.control}

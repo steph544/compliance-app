@@ -1,19 +1,45 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useData } from "@/context/DataContext";
+import type { Organization, OrganizationAssessment, ProductAssessment } from "@/lib/types";
 import { PageHeader } from "@/app/components/PageHeader";
 
 export default function OrganizationDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const orgId = params.orgId as string;
   const { getOrganization, getOrganizationAssessment, getProductAssessments } = useData();
 
-  const org = getOrganization(orgId);
-  const orgAssessment = getOrganizationAssessment(orgId);
-  const projects = getProductAssessments(orgId);
+  const [org, setOrg] = useState<Organization | null | undefined>(undefined);
+  const [orgAssessment, setOrgAssessment] = useState<OrganizationAssessment | undefined>(undefined);
+  const [projects, setProjects] = useState<ProductAssessment[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getOrganization(orgId).then((o) => {
+      if (!cancelled) setOrg(o ?? null);
+    });
+    getOrganizationAssessment(orgId).then((a) => {
+      if (!cancelled) setOrgAssessment(a);
+    });
+    getProductAssessments(orgId).then((p) => {
+      if (!cancelled) setProjects(p);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, getOrganization, getOrganizationAssessment, getProductAssessments]);
+
+  if (org === undefined) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <PageHeader title="Loading…" backHref="/" backLabel="Home" />
+        <p className="text-zinc-500 mt-4">Loading organization…</p>
+      </div>
+    );
+  }
 
   if (!org) {
     return (

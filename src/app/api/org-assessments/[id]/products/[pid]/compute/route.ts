@@ -8,6 +8,7 @@ import { mapCompliance } from "@/lib/scoring/compliance-mapper";
 import { recommendHumanAIConfig } from "@/lib/scoring/human-ai-config";
 import { generateServiceCard } from "@/lib/scoring/service-card-generator";
 import { generateImplementationChecklist } from "@/lib/scoring/implementation-checklist";
+import { suggestCloudServicesFromAI } from "@/lib/ai/suggest-cloud-services";
 import { runEngine } from "@/lib/rules-engine";
 import { mapToNist } from "@/lib/scoring/nist-mapper";
 import type { ProductAnswers, OrgAnswers } from "@/lib/scoring/types";
@@ -108,6 +109,7 @@ export async function POST(
     return {
       controlId: sel.controlId,
       controlName: control?.name || sel.controlId,
+      description: control?.description,
       designation: sel.designation,
       reasoning: sel.reasoning,
       implementationSteps: control?.implementationSteps || [],
@@ -131,8 +133,95 @@ export async function POST(
   }));
   const nistMapping = mapToNist(controlSelections, controlsForMapping);
 
-  // 9. Implementation checklist
-  const checklist = generateImplementationChecklist(productAnswers, controlSelections.map((s) => s.controlId));
+  // 9. Implementation checklist (one task per control with steps and evidence)
+  const controlSummaries = controlSelections.map((sel) => {
+    const control = controls.find((c: { controlId: string }) => c.controlId === sel.controlId);
+    return {
+      controlId: sel.controlId,
+      controlName: control?.name ?? sel.controlId,
+      implementationSteps: (control?.implementationSteps as string[]) ?? [],
+      evidenceArtifacts: (control?.evidenceArtifacts as string[]) ?? [],
+    };
+  });
+  const checklist = generateImplementationChecklist(productAnswers, controlSummaries, releaseCriteria);
+
+  // Derive cloud provider for checklist suggested services (AWS or Azure only)
+  const primaryCloud = orgAnswers.step7?.primaryCloudInfrastructure;
+  const hasAws = providers.includes("aws") || providers.includes("bedrock");
+  const hasAzure = providers.includes("azure");
+  let cloudProvider: "aws" | "azure" | null = null;
+  if (primaryCloud === "aws" || (hasAws && primaryCloud !== "azure")) cloudProvider = "aws";
+  else if (primaryCloud === "azure" || (hasAzure && primaryCloud !== "aws")) cloudProvider = "azure";
+
+  if (cloudProvider) {
+    for (const phase of checklist) {
+      for (const task of phase.tasks) {
+        const t = task as { controlId?: string; suggestedServices?: { provider: "aws" | "azure"; service: string; description?: string }[] };
+        if (!t.controlId) continue;
+        const control = controls.find((c: { controlId: string }) => c.controlId === t.controlId);
+        const vendorGuidance = control?.vendorGuidance as Record<string, { service?: string; description?: string; steps?: string[] }> | null;
+        if (!vendorGuidance?.[cloudProvider]) continue;
+        const guidance = vendorGuidance[cloudProvider];
+        if (guidance?.service) {
+          t.suggestedServices = [
+            { provider: cloudProvider, service: guidance.service, description: guidance.description },
+          ];
+        }
+      }
+    }
+
+    const aiEnabled =
+      process.env.OPENAI_API_KEY?.trim() &&
+      process.env.AI_SUGGESTED_SERVICES_ENABLED !== "false";
+    const controlDerivedTasks = checklist.flatMap((phase) =>
+      phase.tasks.filter(
+        (task): task is typeof task & { controlId: string } =>
+          typeof task === "object" && task !== null && "controlId" in task && typeof (task as { controlId?: string }).controlId === "string"
+      )
+    );
+    if (aiEnabled && controlDerivedTasks.length > 0) {
+      const controlContexts = controlDerivedTasks.map((t) => {
+        const control = controls.find((c: { controlId: string }) => c.controlId === (t as { controlId: string }).controlId);
+        const c = t as { controlId: string; task?: string };
+        return {
+          controlId: c.controlId,
+          controlName: (c as { task?: string }).task ?? c.controlId,
+          description: control?.description as string | undefined,
+          implementationSteps: control?.implementationSteps as string[] | undefined,
+        };
+      });
+      try {
+        const aiResults = await suggestCloudServicesFromAI({
+          controlContexts,
+          cloudProvider,
+        });
+        for (const { controlId, suggestions } of aiResults) {
+          if (suggestions.length === 0) continue;
+          for (const phase of checklist) {
+            for (const task of phase.tasks) {
+              const t = task as { controlId?: string; suggestedServices?: { provider: "aws" | "azure"; service: string; description?: string }[] };
+              if (t.controlId !== controlId) continue;
+              const existing = t.suggestedServices ?? [];
+              const existingNames = new Set(existing.map((s) => s.service.toLowerCase().trim()));
+              for (const s of suggestions) {
+                if (!s.service?.trim() || existingNames.has(s.service.toLowerCase().trim())) continue;
+                existingNames.add(s.service.toLowerCase().trim());
+                existing.push({
+                  provider: cloudProvider,
+                  service: s.service.trim(),
+                  description: typeof s.description === "string" ? s.description.trim() : undefined,
+                });
+              }
+              t.suggestedServices = existing;
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        console.error("[product compute] AI suggested services failed:", err);
+      }
+    }
+  }
 
   // 10. Service card
   const serviceCard = generateServiceCard(productAnswers);

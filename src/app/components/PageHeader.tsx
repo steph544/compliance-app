@@ -12,17 +12,17 @@ export function PageHeader({
   backLabel?: string;
 }) {
   return (
-    <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-4">
+    <header className="border-b border-border bg-card px-4 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="max-w-3xl mx-auto flex items-center gap-4">
         {backHref && (
           <Link
             href={backHref}
-            className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             ← {backLabel}
           </Link>
         )}
-        <h1 className="text-xl font-semibold">{title}</h1>
+        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
       </div>
     </header>
   );

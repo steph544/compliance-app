@@ -4,6 +4,13 @@ export const step1Schema = z.object({
   orgName: z.string().min(1, "Organization name is required"),
   orgSize: z.enum(["1-50", "51-500", "501-5000", "5000+"]),
   sector: z.string().min(1, "Sector is required"),
+  /** Organization mission or primary objectives (NIST MAP 1.3). */
+  missionOrObjectives: z.string().optional(),
+  /** Primary goals for AI adoption or responsible AI (NIST MAP 1.3). */
+  goalsForAI: z.string().optional(),
+  /** Primary business context for AI use (NIST MAP 1.4). */
+  primaryBusinessContextForAI: z.string().optional(),
+  /** Business value or context of business use (NIST MAP 1.4). */
   businessModel: z.string().optional(),
 });
 
@@ -42,6 +49,9 @@ export const step7Schema = z.object({
   providers: z.array(z.string()).min(1, "Select at least one provider"),
   deployment: z.enum(["on-prem", "cloud", "hybrid"]),
   thirdPartyComponents: z.boolean().default(false),
+  primaryCloudInfrastructure: z
+    .enum(["aws", "azure", "gcp", "multi", "on_prem_only", "hybrid"])
+    .optional(),
 });
 
 export const step8Schema = z.object({
@@ -50,6 +60,8 @@ export const step8Schema = z.object({
   modelInventory: z.boolean().default(false),
   incidentResponse: z.boolean().default(false),
   sdlcControls: z.boolean().default(false),
+  /** Interdisciplinary teams for AI context (NIST MAP 1.2). */
+  interdisciplinaryTeams: z.enum(["none", "partial", "yes"]).optional(),
 });
 
 export const step9Schema = z.object({

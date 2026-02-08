@@ -10,6 +10,11 @@ import { ImplementationChecklist } from "@/components/results/product/Implementa
 import { ServiceCard } from "@/components/results/product/ServiceCard";
 import { MonitoringSpec } from "@/components/results/product/MonitoringSpec";
 import { ExportPanel } from "@/components/results/shared/ExportPanel";
+import { TabContentFadeIn } from "@/components/results/shared/TabContentFadeIn";
+import { RecomputeProductButton } from "@/components/results/product/RecomputeProductButton";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -69,19 +74,30 @@ export default async function ProductResultsPage({
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Product Results</h1>
-        <p className="text-muted-foreground mt-1">
-          Assessment results and governance requirements
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Product Results</h1>
+          <p className="text-muted-foreground mt-1">
+            Assessment results and governance requirements
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <RecomputeProductButton orgAssessmentId={id} productId={pid} />
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/org/${id}/product/${pid}/wizard`} className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Edit assessment
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="risk" className="w-full">
-        <TabsList className="w-full flex flex-wrap h-auto gap-1">
+        <TabsList variant="line" className="w-full flex flex-wrap h-auto gap-1">
           <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
           <TabsTrigger value="release">Release Criteria</TabsTrigger>
           <TabsTrigger value="controls">Technical Controls</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="compliance">Regulatory Compliance</TabsTrigger>
           <TabsTrigger value="nist">NIST Mapping</TabsTrigger>
           <TabsTrigger value="checklist">Implementation Checklist</TabsTrigger>
           <TabsTrigger value="servicecard">Service Card</TabsTrigger>
@@ -90,59 +106,79 @@ export default async function ProductResultsPage({
         </TabsList>
 
         <TabsContent value="risk" className="mt-6">
-          <ProductRiskAssessment
-            result={{
-              riskTier: result.riskTier,
-              riskScore: result.riskScore,
-              riskDrivers: result.riskDrivers,
-              fitForAiResult: result.fitForAiResult,
-              stakeholderMap: result.stakeholderMap,
-            }}
-            orgRiskTier={orgRiskTier}
-          />
+          <TabContentFadeIn>
+            <ProductRiskAssessment
+              result={{
+                riskTier: result.riskTier,
+                riskScore: result.riskScore,
+                riskDrivers: result.riskDrivers,
+                fitForAiResult: result.fitForAiResult,
+                stakeholderMap: result.stakeholderMap,
+              }}
+              orgRiskTier={orgRiskTier}
+            />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="release" className="mt-6">
-          <ReleaseCriteriaMatrix
-            releaseCriteria={result.releaseCriteria}
-          />
+          <TabContentFadeIn>
+            <ReleaseCriteriaMatrix
+              releaseCriteria={result.releaseCriteriaMatrix ?? result.releaseCriteria ?? []}
+            />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="controls" className="mt-6">
-          <TechnicalControls
-            technicalControls={result.technicalControls}
-          />
+          <TabContentFadeIn>
+            <TechnicalControls
+              technicalControls={result.technicalControls}
+            />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="compliance" className="mt-6">
-          <ComplianceRequirements
-            complianceRequirements={result.complianceRequirements}
-          />
+          <TabContentFadeIn>
+            <ComplianceRequirements
+              complianceRequirements={result.complianceRequirements}
+            />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="nist" className="mt-6">
-          <ProductNistMapping nistMapping={result.nistMapping} />
+          <TabContentFadeIn>
+            <ProductNistMapping nistMapping={result.nistMapping} />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="checklist" className="mt-6">
-          <ImplementationChecklist
-            implementationChecklist={result.implementationChecklist}
-          />
+          <TabContentFadeIn>
+            <ImplementationChecklist
+              implementationChecklist={result.implementationChecklist}
+              orgAssessmentId={id}
+              productId={pid}
+            />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="servicecard" className="mt-6">
-          <ServiceCard serviceCard={result.serviceCard} />
+          <TabContentFadeIn>
+            <ServiceCard serviceCard={result.serviceCard} />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="monitoring" className="mt-6">
-          <MonitoringSpec monitoringSpec={result.monitoringSpec} />
+          <TabContentFadeIn>
+            <MonitoringSpec monitoringSpec={result.monitoringSpec} />
+          </TabContentFadeIn>
         </TabsContent>
 
         <TabsContent value="export" className="mt-6">
-          <ExportPanel
-            type="product"
-            exportUrl={`/api/org-assessments/${id}/products/${pid}/export`}
-          />
+          <TabContentFadeIn>
+            <ExportPanel
+              type="product"
+              exportUrl={`/api/org-assessments/${id}/products/${pid}/export`}
+            />
+          </TabContentFadeIn>
         </TabsContent>
       </Tabs>
     </div>

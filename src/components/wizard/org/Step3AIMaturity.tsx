@@ -12,9 +12,9 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { SelectableOptionTiles } from "@/components/wizard/SelectableOptionTiles";
 
 const MATURITY_OPTIONS = [
   {
@@ -60,51 +60,40 @@ export default function Step3AIMaturity() {
   return (
     <Form {...form}>
       <form className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          Your AI maturity stage influences governance recommendations and readiness scoring.
+        </p>
+        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
+            AI Maturity Stage
+          </h3>
         <FormField
           control={form.control}
           name="maturityStage"
           render={({ field }) => (
             <FormItem>
               <FormLabel>AI Maturity Stage</FormLabel>
-              <p className="text-sm text-muted-foreground">
+              <FormDescription>
                 Select the stage that best describes your organization&apos;s current AI
-                adoption level.
-              </p>
+                adoption level. Used to tailor governance and control recommendations.
+              </FormDescription>
               <FormControl>
-                <RadioGroup
+                <SelectableOptionTiles
+                  options={MATURITY_OPTIONS.map((o) => ({
+                    value: o.value,
+                    label: o.label,
+                    description: o.description,
+                  }))}
                   value={field.value}
-                  onValueChange={field.onChange}
-                  className="grid gap-4 mt-2"
-                >
-                  {MATURITY_OPTIONS.map((option) => (
-                    <div
-                      key={option.value}
-                      className="flex items-start gap-3 rounded-lg border p-4"
-                    >
-                      <RadioGroupItem
-                        value={option.value}
-                        id={`maturity-${option.value}`}
-                        className="mt-0.5"
-                      />
-                      <div className="grid gap-1">
-                        <Label
-                          htmlFor={`maturity-${option.value}`}
-                          className="font-medium"
-                        >
-                          {option.label}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {option.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </RadioGroup>
+                  onChange={field.onChange}
+                  gridCols="2"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        </section>
       </form>
     </Form>
   );
