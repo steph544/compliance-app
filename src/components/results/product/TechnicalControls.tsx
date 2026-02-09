@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DonutChart } from "@/components/charts/DonutChart";
 import { FadeIn } from "@/components/animation/FadeIn";
 import { StaggeredList, StaggeredItem } from "@/components/animation/StaggeredList";
 import { AnimatePresence, motion } from "framer-motion";
 import { DESIGNATION_COLORS } from "@/components/charts/chart-colors";
 import { ResultsSectionIntro } from "@/components/results/shared/ResultsSectionIntro";
+import { Sparkles } from "lucide-react";
 
 interface TechnicalControl {
   controlId: string;
@@ -21,10 +21,14 @@ interface TechnicalControl {
   implementationGuide?: string;
   owner?: string;
   vendorGuidance?: Record<string, unknown>;
+  aiGenerated?: boolean;
+  accepted?: boolean;
 }
 
 interface TechnicalControlsProps {
   technicalControls: TechnicalControl[];
+  orgId?: string;
+  productId?: string;
 }
 
 const designationConfig: Record<
@@ -63,7 +67,17 @@ function ControlCard({ control }: { control: TechnicalControl }) {
       <CardContent className="pt-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1 min-w-0 flex-1">
-            <p className="text-sm font-medium">{displayName}</p>
+            <p className="text-sm font-medium inline-flex items-center gap-2 flex-wrap">
+              {displayName}
+              {control.aiGenerated && (
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] font-normal px-1.5 py-0"
+                >
+                  AI
+                </Badge>
+              )}
+            </p>
             <p className="font-mono text-xs text-muted-foreground">
               {control.controlId}
             </p>
@@ -138,20 +152,105 @@ function ControlCard({ control }: { control: TechnicalControl }) {
   );
 }
 
+function AddRecommendationButton({
+  orgId,
+  productId,
+  controlId,
+  compact,
+  onSuccess,
+}: {
+  orgId: string;
+  productId: string;
+  /** When set, "Add" accepts this recommendation (removes from suggestions, adds to list). When unset, generates a new suggestion. */
+  controlId?: string;
+  compact?: boolean;
+  onSuccess?: (updatedControls: TechnicalControl[]) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAdd = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const url = controlId
+        ? `/api/org-assessments/${orgId}/products/${productId}/accept-technical-control-recommendation`
+        : `/api/org-assessments/${orgId}/products/${productId}/add-technical-control-recommendation`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: controlId ? { "Content-Type": "application/json" } : undefined,
+        body: controlId ? JSON.stringify({ controlId }) : undefined,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? (controlId ? "Failed to add" : "Failed to add recommendation"));
+        return;
+      }
+      if (Array.isArray(data.technicalControls) && onSuccess) {
+        onSuccess(data.technicalControls as TechnicalControl[]);
+      }
+    } catch {
+      setError("Request failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const label = compact ? "Add" : "Add recommendation";
+  return (
+    <div className="flex flex-col gap-1">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className={compact ? "h-6 text-xs" : undefined}
+        onClick={handleAdd}
+        disabled={loading}
+      >
+        {loading ? "Adding…" : label}
+      </Button>
+      {error && (
+        <p className="text-xs text-destructive">{error}</p>
+      )}
+    </div>
+  );
+}
+
 export function TechnicalControls({
   technicalControls,
+  orgId,
+  productId,
 }: TechnicalControlsProps) {
-  const controls = technicalControls ?? [];
+  const initialControls = technicalControls ?? [];
+  const [controls, setControls] = useState<TechnicalControl[]>(initialControls);
 
-  const sorted = [...controls].sort((a, b) => {
+  useEffect(() => {
+    setControls(initialControls);
+  }, [initialControls]);
+
+  const suggestionControls = controls.filter(
+    (c) => c.aiGenerated === true && !c.accepted
+  );
+  const listedControls = controls.filter(
+    (c) => !c.aiGenerated || Boolean(c.accepted)
+  );
+
+  const sorted = [...listedControls].sort((a, b) => {
     const orderA = designationConfig[a.designation]?.order ?? 99;
     const orderB = designationConfig[b.designation]?.order ?? 99;
     return orderA - orderB;
   });
 
+  const groupOrder = ["REQUIRED", "RECOMMENDED", "OPTIONAL"] as const;
+  type DesignationFilter = (typeof groupOrder)[number];
+
   const grouped = sorted.reduce<Record<string, TechnicalControl[]>>(
     (acc, control) => {
-      const key = control.designation;
+      const raw = String(control.designation ?? "").toUpperCase().trim();
+      const key =
+        raw === "REQUIRED" || raw === "RECOMMENDED" || raw === "OPTIONAL"
+          ? raw
+          : "OPTIONAL";
       if (!acc[key]) acc[key] = [];
       acc[key].push(control);
       return acc;
@@ -159,19 +258,97 @@ export function TechnicalControls({
     {}
   );
 
-  const groupOrder = ["REQUIRED", "RECOMMENDED", "OPTIONAL"];
+  const defaultFilter: DesignationFilter =
+    groupOrder.find((d) => (grouped[d]?.length ?? 0) > 0) ?? "REQUIRED";
+  const [filter, setFilter] = useState<DesignationFilter>(defaultFilter);
+  const filteredControls = grouped[filter] ?? [];
 
-  // Donut chart data
-  const donutData = groupOrder
-    .map((key) => ({
-      name: key.charAt(0) + key.slice(1).toLowerCase(),
-      value: grouped[key]?.length ?? 0,
-      color: DESIGNATION_COLORS[key] ?? "#94a3b8",
-    }))
-    .filter((d) => d.value > 0);
+  useEffect(() => {
+    if (filteredControls.length === 0 && listedControls.length > 0) {
+      setFilter(defaultFilter);
+    }
+  }, [filteredControls.length, listedControls.length, defaultFilter]);
 
   return (
     <div className="space-y-8">
+      {/* AI suggestions style block - up top */}
+      <FadeIn>
+        <section className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">
+                Technical control recommendations
+              </h3>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Suggested controls from this assessment. Add any with the button on each card.
+            </p>
+          </div>
+          {suggestionControls.length > 0 ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {suggestionControls.map((control, i) => {
+                const displayName = control.controlName || control.controlId;
+                const reasonLine = control.reasoning?.[0] ?? control.description ?? "";
+                const detailLine = control.designation
+                  ? `Designation: ${control.designation}`
+                  : control.implementationSteps?.[0] ?? "";
+                return (
+                  <div
+                    key={control.controlId ?? `ai-${i}`}
+                    className="rounded-md border border-border bg-card px-3 py-2 text-sm"
+                  >
+                    <div className="font-medium text-foreground inline-flex items-center gap-1 flex-wrap">
+                      {displayName}
+                      <Badge
+                        variant="secondary"
+                        className="ml-2 text-[10px] font-normal px-1.5 py-0"
+                      >
+                        AI
+                      </Badge>
+                    </div>
+                    {reasonLine && (
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {reasonLine}
+                      </div>
+                    )}
+                    {detailLine && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {detailLine}
+                      </div>
+                    )}
+                    {orgId && productId && (
+                      <div className="mt-2">
+                        <AddRecommendationButton
+                          orgId={orgId}
+                          productId={productId}
+                          controlId={control.controlId}
+                          compact
+                          onSuccess={setControls}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                No AI-suggested controls yet. Add one below or recompute results to generate suggestions.
+              </p>
+              {orgId && productId && (
+                <AddRecommendationButton
+                  orgId={orgId}
+                  productId={productId}
+                  onSuccess={setControls}
+                />
+              )}
+            </div>
+          )}
+        </section>
+      </FadeIn>
+
       <FadeIn>
         <ResultsSectionIntro
           description="Technical controls recommended for this product by risk tier. Required controls must be implemented before release; recommended and optional strengthen resilience."
@@ -187,49 +364,59 @@ export function TechnicalControls({
           </div>
         </FadeIn>
       ) : (
-        <>
-          {/* Distribution Chart */}
-          {donutData.length > 0 && (
-            <FadeIn delay={0.05}>
-              <Card className="transition-card hover-lift">
-                <CardContent className="py-6">
-                  <div className="max-w-xs mx-auto">
-                    <DonutChart data={donutData} centerLabel="Controls" height={220} />
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeIn>
-          )}
+        <FadeIn>
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground mr-1">
+                Show:
+              </span>
+              {groupOrder.map((designation) => {
+                const count = grouped[designation]?.length ?? 0;
+                const isActive = filter === designation;
+                const label =
+                  designation === "REQUIRED"
+                    ? "Required"
+                    : designation === "RECOMMENDED"
+                      ? "Recommended"
+                      : "Optional";
+                return (
+                  <Button
+                    key={designation}
+                    type="button"
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(designation)}
+                    className="gap-1.5"
+                  >
+                    {label}
+                    <Badge
+                      variant={isActive ? "secondary" : "outline"}
+                      className="ml-0.5 h-5 min-w-5 px-1.5 text-xs"
+                    >
+                      {count}
+                    </Badge>
+                  </Button>
+                );
+              })}
+            </div>
 
-          {groupOrder.map((designation, groupIdx) => {
-        const groupControls = grouped[designation];
-        if (!groupControls || groupControls.length === 0) return null;
-
-        return (
-          <FadeIn key={designation} delay={groupIdx * 0.1}>
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                {designation}
-                <Badge
-                  variant={
-                    designationConfig[designation]?.badgeVariant ?? "secondary"
-                  }
-                >
-                  {groupControls.length}
-                </Badge>
-              </h3>
-              <StaggeredList className="grid gap-3">
-                {groupControls.map((control, i) => (
-                  <StaggeredItem key={i}>
+            {filteredControls.length === 0 ? (
+              <div className="rounded-lg border border-border bg-muted/20 py-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  No {filter === "REQUIRED" ? "required" : filter === "RECOMMENDED" ? "recommended" : "optional"} controls in this category.
+                </p>
+              </div>
+            ) : (
+              <StaggeredList key={filter} className="grid gap-4 sm:grid-cols-2">
+                {filteredControls.map((control, i) => (
+                  <StaggeredItem key={control.controlId ?? i}>
                     <ControlCard control={control} />
                   </StaggeredItem>
                 ))}
               </StaggeredList>
-            </div>
-          </FadeIn>
-        );
-      })}
-        </>
+            )}
+          </div>
+        </FadeIn>
       )}
     </div>
   );

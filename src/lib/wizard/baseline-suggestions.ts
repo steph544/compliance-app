@@ -9,6 +9,8 @@ export interface BaselineMetricSuggestion {
   target: string;
   mustHave: boolean;
   reason?: string;
+  /** Set by API when suggestion is from LLM; used to show "AI" badge in UI. */
+  aiGenerated?: boolean;
 }
 
 export interface RAIConstraintSuggestion {
@@ -16,6 +18,8 @@ export interface RAIConstraintSuggestion {
   threshold: string;
   owner: string;
   reason?: string;
+  /** Set by API when suggestion is from LLM; used to show "AI" badge in UI. */
+  aiGenerated?: boolean;
 }
 
 type Answers = Record<string, Record<string, unknown> | undefined>;

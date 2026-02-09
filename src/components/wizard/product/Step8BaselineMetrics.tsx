@@ -2,11 +2,16 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { useParams } from "next/navigation";
 import { z } from "zod";
 import { useWizardStore } from "@/lib/wizard/wizard-store";
 import { productStep8Schema } from "@/lib/wizard/product-schema";
-import { getBaselineSuggestions } from "@/lib/wizard/baseline-suggestions";
+import {
+  getBaselineSuggestions,
+  type BaselineMetricSuggestion,
+  type RAIConstraintSuggestion,
+} from "@/lib/wizard/baseline-suggestions";
 import {
   Form,
   FormField,
@@ -19,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/wizard/SectionHeader";
 import { Sparkles } from "lucide-react";
 
@@ -38,6 +44,9 @@ interface RAIConstraint {
 }
 
 export default function Step8BaselineMetrics() {
+  const params = useParams<{ id: string; pid: string }>();
+  const id = params?.id;
+  const pid = params?.pid;
   const { answers, setStepAnswers } = useWizardStore();
   const existingAnswers = (answers.step8 as Step8Data) || {};
 
@@ -47,6 +56,20 @@ export default function Step8BaselineMetrics() {
   const [constraints, setConstraints] = useState<RAIConstraint[]>(
     existingAnswers.raiConstraints ?? []
   );
+  const [aiSuggestions, setAiSuggestions] = useState<{
+    suggestedMetrics: (BaselineMetricSuggestion & { aiGenerated?: boolean })[];
+    suggestedConstraints: (RAIConstraintSuggestion & { aiGenerated?: boolean })[];
+  } | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const ruleBasedSuggestions = useMemo(() => {
+    const { suggestedMetrics, suggestedConstraints } = getBaselineSuggestions(answers);
+    return {
+      suggestedMetrics: suggestedMetrics.map((m) => ({ ...m, aiGenerated: false })),
+      suggestedConstraints: suggestedConstraints.map((c) => ({ ...c, aiGenerated: false })),
+    };
+  }, [answers]);
 
   const form = useForm<Step8Data>({
     resolver: zodResolver(productStep8Schema) as any,
@@ -68,10 +91,51 @@ export default function Step8BaselineMetrics() {
     return () => subscription.unsubscribe();
   }, [form, setStepAnswers]);
 
-  const { suggestedMetrics, suggestedConstraints } = useMemo(
-    () => getBaselineSuggestions(answers),
-    [answers]
-  );
+  useEffect(() => {
+    if (!id || !pid) {
+      setAiSuggestions(null);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null;
+      setSuggestionsLoading(true);
+      fetch(`/api/org-assessments/${id}/products/${pid}/baseline-suggestions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch suggestions");
+          return res.json();
+        })
+        .then((data) => {
+          const metrics = data.suggestedMetrics ?? [];
+          const constraints = data.suggestedConstraints ?? [];
+          setAiSuggestions({
+            suggestedMetrics: metrics.filter((m: { aiGenerated?: boolean }) => m.aiGenerated === true),
+            suggestedConstraints: constraints.filter((c: { aiGenerated?: boolean }) => c.aiGenerated === true),
+          });
+        })
+        .catch(() => setAiSuggestions(null))
+        .finally(() => setSuggestionsLoading(false));
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // Only refetch when steps 1–7 change (context for suggestions). Adding a metric/constraint only updates step 8.
+  }, [id, pid, answers.step1, answers.step2, answers.step3, answers.step4, answers.step5, answers.step6, answers.step7]);
+
+  const { suggestedMetrics, suggestedConstraints } = useMemo(() => ({
+    suggestedMetrics: [
+      ...ruleBasedSuggestions.suggestedMetrics,
+      ...(aiSuggestions?.suggestedMetrics ?? []),
+    ],
+    suggestedConstraints: [
+      ...ruleBasedSuggestions.suggestedConstraints,
+      ...(aiSuggestions?.suggestedConstraints ?? []),
+    ],
+  }), [ruleBasedSuggestions, aiSuggestions]);
 
   const addedMetricNames = useMemo(() => new Set(metrics.map((m) => m.name)), [metrics]);
   const addedConstraintMetrics = useMemo(() => new Set(constraints.map((c) => c.metric)), [constraints]);
@@ -140,7 +204,7 @@ export default function Step8BaselineMetrics() {
         <p className="text-sm text-muted-foreground">
           Baseline metrics and success criteria inform MAP 1.4, MAP 3.1, MANAGE 1.1, MEASURE 1.1.
         </p>
-        {(suggestedMetricsToShow.length > 0 || suggestedConstraintsToShow.length > 0) && (
+        {(suggestionsLoading || suggestedMetricsToShow.length > 0 || suggestedConstraintsToShow.length > 0) && (
         <section className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -149,13 +213,26 @@ export default function Step8BaselineMetrics() {
           <p className="text-xs text-muted-foreground">
             Based on your project type, impact, and risks from earlier steps. Add any that apply — they will move below.
           </p>
+          {suggestionsLoading ? (
+            <p className="text-xs text-muted-foreground">Loading suggestions…</p>
+          ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Suggested metrics</Label>
               <div className="flex flex-wrap gap-2">
-                {suggestedMetricsToShow.map((m) => (
-                  <div key={m.name} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
-                    <div className="font-medium text-foreground">{m.name}</div>
+                {suggestedMetricsToShow.map((m, i) => (
+                  <div key={`metric-${i}-${m.name}`} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+                    <div className="font-medium text-foreground inline-flex items-center gap-1 flex-wrap">
+                      {m.name}
+                      {m.aiGenerated && (
+                        <Badge
+                          variant="secondary"
+                          className="ml-2 text-[10px] font-normal px-1.5 py-0"
+                        >
+                          AI
+                        </Badge>
+                      )}
+                    </div>
                     {m.reason && <div className="mt-0.5 text-xs text-muted-foreground">{m.reason}</div>}
                     <div className="mt-1 flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">Target: {m.target}</span>
@@ -176,9 +253,19 @@ export default function Step8BaselineMetrics() {
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Suggested RAI constraints</Label>
               <div className="flex flex-wrap gap-2">
-                {suggestedConstraintsToShow.map((c) => (
-                  <div key={c.metric} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
-                    <div className="font-medium text-foreground">{c.metric}</div>
+                {suggestedConstraintsToShow.map((c, i) => (
+                  <div key={`constraint-${i}-${c.metric}`} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+                    <div className="font-medium text-foreground inline-flex items-center gap-1 flex-wrap">
+                      {c.metric}
+                      {c.aiGenerated && (
+                        <Badge
+                          variant="secondary"
+                          className="ml-2 text-[10px] font-normal px-1.5 py-0"
+                        >
+                          AI
+                        </Badge>
+                      )}
+                    </div>
                     {c.reason && <div className="mt-0.5 text-xs text-muted-foreground">{c.reason}</div>}
                     <div className="mt-1 flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">{c.threshold}</span>
@@ -197,6 +284,7 @@ export default function Step8BaselineMetrics() {
               </div>
             </div>
           </div>
+          )}
         </section>
         )}
 

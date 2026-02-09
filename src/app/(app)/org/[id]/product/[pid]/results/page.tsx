@@ -132,6 +132,8 @@ export default async function ProductResultsPage({
           <TabContentFadeIn>
             <TechnicalControls
               technicalControls={result.technicalControls}
+              orgId={id}
+              productId={pid}
             />
           </TabContentFadeIn>
         </TabsContent>

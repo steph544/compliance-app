@@ -8,6 +8,7 @@ import { MonitoringPlan } from "@/components/results/org/MonitoringPlan";
 import { PolicyDrafts } from "@/components/results/org/PolicyDrafts";
 import { ProductAssessmentsList } from "@/components/results/org/ProductAssessmentsList";
 import { ExportPanel } from "@/components/results/org/ExportPanel";
+import { RecomputeButton } from "@/components/results/org/RecomputeButton";
 import type { MonitoringPlanData, OperationsRunbookData } from "@/lib/scoring/types";
 
 const VALID_SECTIONS = [
@@ -99,12 +100,15 @@ export default async function OrgResultsPage({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">{sectionTitle}</h1>
-        <p className="text-muted-foreground mt-0.5 text-sm">
-          {section === "summary" && "Organization risk and driver summary."}
-          {section !== "summary" && "Review your AI governance assessment findings and recommendations."}
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">{sectionTitle}</h1>
+          <p className="text-muted-foreground mt-0.5 text-sm">
+            {section === "summary" && "Organization risk and driver summary."}
+            {section !== "summary" && "Review your AI governance assessment findings and recommendations."}
+          </p>
+        </div>
+        <RecomputeButton assessmentId={id} className="shrink-0" />
       </div>
 
       {section === "summary" && (
@@ -163,6 +167,7 @@ export default async function OrgResultsPage({
 
       {section === "monitoring" && (
         <MonitoringPlan
+          key={`monitoring-${String((result as { computedAt?: unknown }).computedAt ?? id)}`}
           assessmentId={id}
           monitoringPlan={result.monitoringPlan as MonitoringPlanData}
           operationsRunbook={result.operationsRunbook as OperationsRunbookData}

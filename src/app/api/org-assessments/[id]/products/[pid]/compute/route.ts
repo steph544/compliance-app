@@ -9,6 +9,8 @@ import { recommendHumanAIConfig } from "@/lib/scoring/human-ai-config";
 import { generateServiceCard } from "@/lib/scoring/service-card-generator";
 import { generateImplementationChecklist } from "@/lib/scoring/implementation-checklist";
 import { suggestCloudServicesFromAI } from "@/lib/ai/suggest-cloud-services";
+import { buildProductContextForAI } from "@/lib/ai/product-context-for-ai";
+import { generateTechnicalControlRecommendations } from "@/lib/ai/generate-technical-control-recommendations";
 import { runEngine } from "@/lib/rules-engine";
 import { mapToNist } from "@/lib/scoring/nist-mapper";
 import type { ProductAnswers, OrgAnswers } from "@/lib/scoring/types";
@@ -114,8 +116,31 @@ export async function POST(
       reasoning: sel.reasoning,
       implementationSteps: control?.implementationSteps || [],
       vendorGuidance: Object.keys(relevantGuidance).length > 0 ? relevantGuidance : undefined,
+      aiGenerated: false,
     };
   });
+
+  const baseContext = buildProductContextForAI(productAnswers as Record<string, Record<string, unknown> | undefined>);
+  const aiContext = {
+    ...baseContext,
+    riskTier: riskResult.tier,
+    existingControlNames: technicalControls.map((c) => c.controlName ?? c.controlId),
+  };
+  const aiSuggestions = await generateTechnicalControlRecommendations(aiContext, { count: 6 });
+  const maxAiControls = 6;
+  for (let i = 0; i < Math.min(aiSuggestions.length, maxAiControls); i++) {
+    const item = aiSuggestions[i];
+    technicalControls.push({
+      controlId: `AI-SUGGEST-${i + 1}`,
+      controlName: item.name,
+      description: item.description,
+      designation: item.designation,
+      reasoning: [item.reason],
+      implementationSteps: item.implementationSteps ?? [],
+      aiGenerated: true,
+      accepted: false,
+    });
+  }
 
   // 7. Compliance requirements
   const compliance = mapCompliance(productAnswers, orgAnswers.step2?.countries || []);
@@ -229,14 +254,75 @@ export async function POST(
   // 11. Human-AI config
   const humanAIConfig = recommendHumanAIConfig(productAnswers);
 
-  // 12. Monitoring spec
-  const monitoringSpec = {
-    metrics: [
+  // 12. Monitoring spec — align with org plan when available, else product-only fallback
+  const orgPlan = (orgResult as Record<string, unknown>)?.monitoringPlan as {
+    metrics?: Array<{ name?: string; target?: string }>;
+  } | undefined;
+  const orgMetrics = Array.isArray(orgPlan?.metrics) ? orgPlan.metrics : [];
+
+  type ProductMetric = { name: string; threshold: string; alertCondition: string };
+  const ALERT_CONDITIONS: Record<string, string> = {
+    "Model accuracy": "Drops below threshold",
+    "Bias metrics": "Disparity ratio > 0.8 or < 1.25",
+    "Response latency (p95)": "Exceeds threshold for 5 minutes",
+    "Error rate": "Exceeds 1% for 15 minutes",
+    "System availability": "Drops below 99.5% for 15 minutes",
+    "Data drift": "Breaches threshold",
+    "Data privacy / access": "Breaches threshold",
+    "Biometric accuracy / consent": "Breaches threshold",
+  };
+  function normalizeMetricName(orgName: string): string {
+    const n = (orgName || "").trim();
+    if (n === "Model accuracy/performance") return "Model accuracy";
+    if (n === "Inference latency") return "Response latency (p95)";
+    return n;
+  }
+
+  let metrics: ProductMetric[];
+  if (orgMetrics.length > 0) {
+    const byName = new Map<string, ProductMetric>();
+    for (const m of orgMetrics) {
+      const name = normalizeMetricName((m as { name?: string }).name ?? "");
+      if (!name) continue;
+      const target = (m as { target?: string }).target ?? "";
+      byName.set(name, {
+        name,
+        threshold: target,
+        alertCondition: ALERT_CONDITIONS[name] ?? "Breaches threshold",
+      });
+    }
+    // Product override: latency threshold from product answers
+    const latencyThreshold = productAnswers.step6?.latencyRequirements;
+    if (latencyThreshold && byName.has("Response latency (p95)")) {
+      const existing = byName.get("Response latency (p95)")!;
+      byName.set("Response latency (p95)", { ...existing, threshold: latencyThreshold });
+    } else if (latencyThreshold) {
+      byName.set("Response latency (p95)", {
+        name: "Response latency (p95)",
+        threshold: latencyThreshold,
+        alertCondition: "Exceeds threshold for 5 minutes",
+      });
+    }
+    // Bias: ensure present if product has bias risk categories
+    if (productAnswers.step7?.biasRiskCategories?.length && !byName.has("Bias metrics")) {
+      byName.set("Bias metrics", {
+        name: "Bias metrics",
+        threshold: "No statistically significant disparate impact",
+        alertCondition: "Disparity ratio > 0.8 or < 1.25",
+      });
+    }
+    metrics = [...byName.values()];
+  } else {
+    metrics = [
       { name: "Model accuracy", threshold: "Within 5% of baseline", alertCondition: "Drops below threshold" },
       { name: "Response latency (p95)", threshold: productAnswers.step6?.latencyRequirements || "< 2s", alertCondition: "Exceeds threshold for 5 minutes" },
       { name: "Error rate", threshold: "< 1%", alertCondition: "Exceeds 1% for 15 minutes" },
-      ...(productAnswers.step7?.biasRiskCategories?.length ? [{ name: "Bias metrics", threshold: "No statistically significant disparate impact", alertCondition: "Disparity ratio > 0.8 or < 1.25" }] : []),
-    ],
+      ...(productAnswers.step7?.biasRiskCategories?.length ? [{ name: "Bias metrics", threshold: "No statistically significant disparate impact", alertCondition: "Disparity ratio > 0.8 or < 1.25" }] as ProductMetric[] : []),
+    ];
+  }
+
+  const monitoringSpec = {
+    metrics,
     dashboardSpec: `${productAnswers.step1?.projectName || "AI System"} Monitoring Dashboard`,
     environmentalTracking: {
       modelSize: productAnswers.step6?.modelSize || "unknown",
