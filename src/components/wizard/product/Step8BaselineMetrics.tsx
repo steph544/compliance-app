@@ -205,7 +205,7 @@ export default function Step8BaselineMetrics() {
           Baseline metrics and success criteria inform MAP 1.4, MAP 3.1, MANAGE 1.1, MEASURE 1.1.
         </p>
         {(suggestionsLoading || suggestedMetricsToShow.length > 0 || suggestedConstraintsToShow.length > 0) && (
-        <section className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">AI suggestions</h3>

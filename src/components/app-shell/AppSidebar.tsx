@@ -29,7 +29,7 @@ const resultsSections = [
   { section: "monitoring", label: "Monitoring Plan", icon: Calendar },
   { section: "policies", label: "Policy Drafts", icon: FileText },
   { section: "products", label: "Product Assessments", icon: Package },
-  { section: "export", label: "Export", icon: Download },
+  { section: "export", label: "Download", icon: Download },
 ] as const;
 
 function NavLink({

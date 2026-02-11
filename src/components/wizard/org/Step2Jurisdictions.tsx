@@ -73,11 +73,11 @@ export default function Step2Jurisdictions() {
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
+      <form className="w-full min-w-0 space-y-6">
         <p className="text-sm text-muted-foreground">
           This step informs jurisdiction-specific controls and compliance mapping.
         </p>
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             Operating jurisdictions
           </h3>
@@ -126,7 +126,7 @@ export default function Step2Jurisdictions() {
         </section>
 
         {showUsStates && (
-          <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
             <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
               U.S. state jurisdictions
             </h3>

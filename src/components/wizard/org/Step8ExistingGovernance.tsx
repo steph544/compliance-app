@@ -82,7 +82,7 @@ export default function Step8ExistingGovernance() {
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
+      <form className="w-full min-w-0 space-y-6">
         <div>
           <h3 className="text-sm font-medium mb-1">Existing Governance Controls</h3>
           <p className="text-sm text-muted-foreground">
@@ -102,7 +102,7 @@ export default function Step8ExistingGovernance() {
               </FormDescription>
               <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v === "" ? undefined : v)}>
                 <FormControl>
-                  <SelectTrigger className="w-full max-w-sm">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                 </FormControl>

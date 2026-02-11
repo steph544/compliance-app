@@ -79,13 +79,13 @@ export default function Step1OrgProfile() {
 
   return (
     <Form {...form}>
-      <form className="space-y-8">
+      <form className="w-full min-w-0 space-y-8">
         <p className="text-sm text-muted-foreground">
           This information shapes your governance blueprint, risk tier, and NIST-aligned recommendations.
         </p>
 
         {/* Organization identity */}
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             Organization identity
           </h3>
@@ -168,7 +168,7 @@ export default function Step1OrgProfile() {
         </section>
 
         {/* Business context */}
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             Business context (optional)
           </h3>

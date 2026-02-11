@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 import { syncChecklistWithTechnicalControls } from "@/lib/scoring/sync-checklist-with-controls";
 import type { ImplementationPhase } from "@/lib/scoring/types";
 
@@ -92,6 +93,14 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  await logAudit({
+    entityType: "ProductAssessment",
+    entityId: pid,
+    action: "accept_ai_control",
+    actorId: userId,
+    payload: { controlId },
+  }).catch((e) => console.error("[audit] accept_ai_control:", e));
 
   revalidatePath(`/org/${id}/product/${pid}/results`);
 

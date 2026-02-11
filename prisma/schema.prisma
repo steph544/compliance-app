@@ -96,9 +96,10 @@ model OrgAssessment {
   answers   Json                 @default("{}")
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
-  result    OrgAssessmentResult?
-  aiSystems AISystem[]
-  products  ProductAssessment[]
+  result                  OrgAssessmentResult?
+  aiSystems               AISystem[]
+  products                ProductAssessment[]
+  reassessmentTriggers    ReassessmentTrigger[]
 
   @@index([userId])
 }
@@ -118,6 +119,7 @@ model OrgAssessmentResult {
   operationsRunbook   Json          // { alerts, incidentTriage, escalationTriggers, roles, timelines }
   policyDrafts        Json          // { responsibleAI, transparency }
   nistProgress        Json          @default("{}") // { implementedControlIds: string[], controlNotes: Record<string, string> }
+  decisionLog         Json?         // { computedAt, riskTier, riskScore, driverSummary, rulesFired: [{ ruleId, controlIds }], controlSelectionCount }
   computedAt          DateTime      @default(now())
   implementation      GovernanceImplementation?
 }
@@ -154,6 +156,9 @@ model ProductAssessment {
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
   result          ProductAssessmentResult?
+  evidenceItems        EvidenceItem[]
+  releaseApproval     ReleaseApproval?
+  reassessmentTriggers ReassessmentTrigger[]
 
   @@index([orgAssessmentId])
   @@index([userId])
@@ -175,7 +180,91 @@ model ProductAssessmentResult {
   implementationChecklist Json             // [{ phase, tasks[], status }]
   serviceCard            Json              // { purpose, model, data, limitations, prohibitedUses, oversight, monitoring }
   monitoringSpec         Json              // { metrics, thresholds, alerts, dashboardSpec, environmentalTracking }
+  decisionLog            Json?             // { computedAt, riskTier, riskScore, driverSummary, rulesFired: [{ ruleId, controlIds }], controlSelectionCount }
   computedAt             DateTime          @default(now())
+}
+
+model EvidenceItem {
+  id                   String             @id @default(cuid())
+  productAssessmentId  String
+  productAssessment    ProductAssessment  @relation(fields: [productAssessmentId], references: [id], onDelete: Cascade)
+  controlId            String?
+  taskIdentifier       String?
+  requestedArtifact   String
+  status               EvidenceStatus     @default(REQUESTED)
+  linkUrl              String?
+  note                 String?
+  uploadedFileKey      String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([productAssessmentId, controlId])
+  @@index([productAssessmentId, taskIdentifier])
+}
+
+enum EvidenceStatus {
+  REQUESTED
+  COLLECTED
+  VERIFIED
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String   // e.g. "ProductAssessment", "OrgAssessment", "TechnicalControl"
+  entityId   String
+  action     String   // e.g. "compute", "accept_ai_control", "release_approval", "evidence_submitted"
+  actorId    String
+  actorEmail String?
+  payload    Json?    // e.g. { controlId, previousAccepted, newAccepted }
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([action])
+}
+
+model ReleaseApproval {
+  id           String             @id @default(cuid())
+  productAssessmentId String       @unique
+  productAssessment   ProductAssessment @relation(fields: [productAssessmentId], references: [id], onDelete: Cascade)
+  status       ReleaseApprovalStatus @default(PENDING)
+  approvedBy   String?
+  approvedAt   DateTime?
+  comment      String?
+  createdAt    DateTime           @default(now())
+
+  @@index([productAssessmentId])
+}
+
+enum ReleaseApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ReassessmentTrigger {
+  id                   String    @id @default(cuid())
+  productAssessmentId   String?
+  productAssessment     ProductAssessment? @relation(fields: [productAssessmentId], references: [id], onDelete: Cascade)
+  orgAssessmentId      String?
+  orgAssessment        OrgAssessment?     @relation(fields: [orgAssessmentId], references: [id], onDelete: Cascade)
+  triggerType          ReassessmentTriggerType
+  config               Json     // e.g. { intervalDays: 90 } or { cron: "0 0 1 * *" }
+  nextDueAt            DateTime?
+  lastCheckedAt        DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([productAssessmentId])
+  @@index([orgAssessmentId])
+  @@index([nextDueAt])
+}
+
+enum ReassessmentTriggerType {
+  SCHEDULE
+  THRESHOLD
+  EVENT
+  MANUAL
 }
 
 // === AI System Registry ===

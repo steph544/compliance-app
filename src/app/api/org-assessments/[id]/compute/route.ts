@@ -250,6 +250,25 @@ export async function POST(
   const responsibleAI = generateResponsibleAIPolicy(answers, riskResult);
   const transparency = generateTransparencyPolicy(answers, riskResult);
 
+  // Decision log (auditable explainability)
+  const rulesFiredMap = new Map<string, string[]>();
+  for (const sel of controlSelections) {
+    const ids = sel.ruleIds ?? [];
+    for (const ruleId of ids) {
+      const arr = rulesFiredMap.get(ruleId) ?? [];
+      if (!arr.includes(sel.controlId)) arr.push(sel.controlId);
+      rulesFiredMap.set(ruleId, arr);
+    }
+  }
+  const decisionLog = {
+    computedAt: new Date().toISOString(),
+    riskTier: riskResult.tier,
+    riskScore: riskResult.score,
+    driverSummary: riskResult.drivers.map((d) => ({ factor: d.factor, contribution: d.contribution, explanation: d.explanation })),
+    rulesFired: Array.from(rulesFiredMap.entries()).map(([ruleId, controlIds]) => ({ ruleId, controlIds })),
+    controlSelectionCount: controlSelections.length,
+  };
+
   // 9. Persist result (upsert to allow recomputation)
   const resultData = {
     riskTier: riskResult.tier,
@@ -262,6 +281,7 @@ export async function POST(
     monitoringPlan: monitoringPlan as any,
     operationsRunbook: runbook as any,
     policyDrafts: { responsibleAI, transparency } as any,
+    decisionLog: decisionLog as any,
   };
 
   const result = await prisma.orgAssessmentResult.upsert({

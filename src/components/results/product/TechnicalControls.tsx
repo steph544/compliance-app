@@ -17,6 +17,7 @@ interface TechnicalControl {
   description?: string;
   designation: string;
   reasoning?: string[];
+  ruleIds?: string[];
   implementationSteps?: string[];
   implementationGuide?: string;
   owner?: string;
@@ -108,6 +109,12 @@ function ControlCard({ control }: { control: TechnicalControl }) {
               ))}
             </ul>
           </div>
+        )}
+
+        {Array.isArray(control.ruleIds) && control.ruleIds.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Rules: {control.ruleIds.join(", ")}
+          </p>
         )}
 
         {hasImplementationContent && (

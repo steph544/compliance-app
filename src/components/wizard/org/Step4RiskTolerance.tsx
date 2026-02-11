@@ -66,11 +66,11 @@ export default function Step4RiskTolerance() {
 
   return (
     <Form {...form}>
-      <form className="space-y-8">
+      <form className="w-full min-w-0 space-y-8">
         <p className="text-sm text-muted-foreground">
           Risk tolerance shapes control selection and governance rigor. Your answers inform NIST-aligned recommendations.
         </p>
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2 mb-2">
             Overall Risk Tolerance
           </h3>
@@ -101,7 +101,7 @@ export default function Step4RiskTolerance() {
         />
         </section>
 
-        <section className="space-y-6 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-6 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             Risk Category Tolerances
           </h3>

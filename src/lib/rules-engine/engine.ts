@@ -26,6 +26,7 @@ export function runEngine(
 
     const { selectControls, designation, explanation } = rule.actions;
     const reason = explanation || rule.name;
+    const ruleId = rule.ruleId;
 
     for (const controlId of selectControls) {
       const existing = selectionMap.get(controlId);
@@ -35,9 +36,11 @@ export function runEngine(
           controlId,
           designation,
           reasoning: [reason],
+          ruleIds: [ruleId],
         });
       } else {
         existing.reasoning.push(reason);
+        if (!existing.ruleIds.includes(ruleId)) existing.ruleIds.push(ruleId);
         if (
           DESIGNATION_PRIORITY[designation] >
           DESIGNATION_PRIORITY[existing.designation]

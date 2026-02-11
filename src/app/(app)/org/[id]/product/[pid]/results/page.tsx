@@ -9,8 +9,14 @@ import { ProductNistMapping } from "@/components/results/product/ProductNistMapp
 import { ImplementationChecklist } from "@/components/results/product/ImplementationChecklist";
 import { ServiceCard } from "@/components/results/product/ServiceCard";
 import { MonitoringSpec } from "@/components/results/product/MonitoringSpec";
+import { EvidenceSection } from "@/components/results/product/EvidenceSection";
+import { ReleaseApprovalCard } from "@/components/results/product/ReleaseApprovalCard";
+import { AuditLogSection } from "@/components/results/product/AuditLogSection";
+import { ReassessmentSection } from "@/components/results/product/ReassessmentSection";
 import { ExportPanel } from "@/components/results/shared/ExportPanel";
+import { PRODUCT_DOWNLOAD_SECTIONS } from "@/lib/download-sections";
 import { TabContentFadeIn } from "@/components/results/shared/TabContentFadeIn";
+import { DecisionLogSummary } from "@/components/results/shared/DecisionLogSummary";
 import { RecomputeProductButton } from "@/components/results/product/RecomputeProductButton";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -100,23 +106,28 @@ export default async function ProductResultsPage({
           <TabsTrigger value="compliance">Regulatory Compliance</TabsTrigger>
           <TabsTrigger value="nist">NIST Mapping</TabsTrigger>
           <TabsTrigger value="checklist">Implementation Checklist</TabsTrigger>
+          <TabsTrigger value="evidence">Evidence</TabsTrigger>
+          <TabsTrigger value="audit">Audit log</TabsTrigger>
           <TabsTrigger value="servicecard">Service Card</TabsTrigger>
           <TabsTrigger value="monitoring">Monitoring Spec</TabsTrigger>
-          <TabsTrigger value="export">Export</TabsTrigger>
+          <TabsTrigger value="export">Download</TabsTrigger>
         </TabsList>
 
         <TabsContent value="risk" className="mt-6">
           <TabContentFadeIn>
-            <ProductRiskAssessment
-              result={{
-                riskTier: result.riskTier,
-                riskScore: result.riskScore,
-                riskDrivers: result.riskDrivers,
-                fitForAiResult: result.fitForAiResult,
-                stakeholderMap: result.stakeholderMap,
-              }}
-              orgRiskTier={orgRiskTier}
-            />
+            <div className="space-y-6">
+              <ProductRiskAssessment
+                result={{
+                  riskTier: result.riskTier,
+                  riskScore: result.riskScore,
+                  riskDrivers: result.riskDrivers,
+                  fitForAiResult: result.fitForAiResult,
+                  stakeholderMap: result.stakeholderMap,
+                }}
+                orgRiskTier={orgRiskTier}
+              />
+              <DecisionLogSummary decisionLog={result.decisionLog} scope="product" />
+            </div>
           </TabContentFadeIn>
         </TabsContent>
 
@@ -162,6 +173,18 @@ export default async function ProductResultsPage({
           </TabContentFadeIn>
         </TabsContent>
 
+        <TabsContent value="evidence" className="mt-6">
+          <EvidenceSection orgId={id} productId={pid} />
+        </TabsContent>
+
+        <TabsContent value="audit" className="mt-6">
+          <AuditLogSection orgId={id} productId={pid} />
+        </TabsContent>
+
+        <TabsContent value="reassessment" className="mt-6">
+          <ReassessmentSection orgId={id} productId={pid} />
+        </TabsContent>
+
         <TabsContent value="servicecard" className="mt-6">
           <TabContentFadeIn>
             <ServiceCard serviceCard={result.serviceCard} />
@@ -179,6 +202,7 @@ export default async function ProductResultsPage({
             <ExportPanel
               type="product"
               exportUrl={`/api/org-assessments/${id}/products/${pid}/export`}
+              sections={PRODUCT_DOWNLOAD_SECTIONS}
             />
           </TabContentFadeIn>
         </TabsContent>

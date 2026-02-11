@@ -63,7 +63,7 @@ export default function Step3AIMaturity() {
         <p className="text-sm text-muted-foreground">
           Your AI maturity stage influences governance recommendations and readiness scoring.
         </p>
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             AI Maturity Stage
           </h3>

@@ -116,7 +116,7 @@ export default function OrgWizardPage() {
 
   if (fetchError) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="w-full px-4 py-10">
         <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-6 text-center">
           <p className="font-medium text-destructive">{fetchError}</p>
           <Link
@@ -133,7 +133,7 @@ export default function OrgWizardPage() {
   const StepComponent = stepComponents[currentStep];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <div className="w-full px-4 py-10">
       <WizardShell
         steps={orgSteps}
         onComplete={handleComplete}

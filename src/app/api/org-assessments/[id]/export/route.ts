@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { parseSectionIds } from "@/lib/download-sections";
+import { getOrgSectionContent } from "@/lib/export/org-section-content";
+import { renderSectionsToPdfBuffer } from "@/lib/export/render-pdf";
+import { renderSectionsToDocxBuffer } from "@/lib/export/render-docx";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { userId } = await auth();
@@ -20,6 +24,60 @@ export async function GET(
   });
 
   if (!assessment) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const { searchParams } = request.nextUrl;
+  const format = searchParams.get("format");
+  const sectionsParam = searchParams.get("sections") ?? searchParams.getAll("sections");
+
+  if (format === "pdf" || format === "docx") {
+    const sectionIds = parseSectionIds("org", sectionsParam);
+    if (sectionIds.length === 0) {
+      return NextResponse.json(
+        { error: "At least one valid section is required for PDF or Word download" },
+        { status: 400 }
+      );
+    }
+
+    const orgAssessment = {
+      orgName: assessment.orgName,
+      result: assessment.result as Record<string, unknown> | null,
+      answers: assessment.answers as Record<string, unknown> | null,
+      products: assessment.products.map((p: { projectName: string; result: unknown }) => ({
+        projectName: p.projectName,
+        result: p.result as { riskTier?: string } | null,
+      })),
+    };
+
+    const contents = sectionIds
+      .map((sid) => getOrgSectionContent(sid, orgAssessment))
+      .filter((c): c is NonNullable<typeof c> => c != null);
+
+    if (contents.length === 0) {
+      return NextResponse.json({ error: "No content for selected sections" }, { status: 400 });
+    }
+
+    const safeName = assessment.orgName.replace(/[^a-zA-Z0-9]/g, "_");
+    const ext = format === "pdf" ? "pdf" : "docx";
+    const filename = `${safeName}_assessment_report.${ext}`;
+
+    if (format === "pdf") {
+      const buffer = renderSectionsToPdfBuffer(contents);
+      return new NextResponse(buffer, {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    const buffer = await renderSectionsToDocxBuffer(contents);
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  }
 
   const result = assessment.result as Record<string, unknown> | null;
   const nistProgress = (result?.nistProgress ?? {}) as {
@@ -84,7 +142,7 @@ export async function GET(
     result: assessment.result,
     controlsDesignatedForImplementation,
     aiSystems: assessment.aiSystems,
-    productAssessments: assessment.products.map((p: any) => ({
+    productAssessments: assessment.products.map((p: { projectName: string; status: string; answers: unknown; result: unknown }) => ({
       projectName: p.projectName,
       status: p.status,
       answers: p.answers,

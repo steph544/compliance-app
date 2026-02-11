@@ -30,6 +30,8 @@ export interface ControlSelection {
   controlId: string;
   designation: "REQUIRED" | "RECOMMENDED" | "OPTIONAL";
   reasoning: string[];
+  /** Rule IDs that selected this control (for traceability). */
+  ruleIds: string[];
 }
 
 export type AssessmentContext = Record<string, unknown>;

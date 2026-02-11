@@ -56,7 +56,7 @@ export function WizardShell({
   };
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="w-full">
       {/* Progress */}
       <div className="mb-8">
         <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
@@ -107,8 +107,8 @@ export function WizardShell({
         </p>
       </div>
 
-      {/* Step content */}
-      <div className="transition-card hover-lift mb-8 rounded-xl border border-border bg-card px-6 py-6 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
+      {/* Step content - w-full min-w-0 so form sections use full width consistently */}
+      <div className="transition-card hover-lift mb-8 w-full min-w-0 rounded-xl border border-border bg-card px-6 py-6 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]">
         {children}
       </div>
 

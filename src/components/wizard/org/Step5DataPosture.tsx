@@ -57,7 +57,7 @@ export default function Step5DataPosture() {
         <p className="text-sm text-muted-foreground">
           Data types drive privacy and security control recommendations and NIST mapping.
         </p>
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             Data Sensitivity Profile
           </h3>

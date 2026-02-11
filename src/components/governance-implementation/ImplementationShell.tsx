@@ -60,7 +60,7 @@ export function ImplementationShell({
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="w-full">
       {/* Progress */}
       <div className="mb-8">
         <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">

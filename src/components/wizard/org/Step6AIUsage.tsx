@@ -48,7 +48,7 @@ export default function Step6AIUsage() {
         <p className="text-sm text-muted-foreground">
           How you use AI influences risk tier, control selection, and governance focus.
         </p>
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             AI Usage Types
           </h3>

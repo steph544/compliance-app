@@ -71,7 +71,7 @@ export default function Step7VendorInfra() {
         <p className="text-sm text-muted-foreground">
           Vendor and infrastructure choices inform cloud-specific controls and implementation guidance.
         </p>
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             AI Providers & Infrastructure
           </h3>

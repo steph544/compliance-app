@@ -7,8 +7,10 @@ import { OrgNistMapping } from "@/components/results/org/OrgNistMapping";
 import { MonitoringPlan } from "@/components/results/org/MonitoringPlan";
 import { PolicyDrafts } from "@/components/results/org/PolicyDrafts";
 import { ProductAssessmentsList } from "@/components/results/org/ProductAssessmentsList";
-import { ExportPanel } from "@/components/results/org/ExportPanel";
+import { ExportPanel } from "@/components/results/shared/ExportPanel";
+import { ORG_DOWNLOAD_SECTIONS } from "@/lib/download-sections";
 import { RecomputeButton } from "@/components/results/org/RecomputeButton";
+import { DecisionLogSummary } from "@/components/results/shared/DecisionLogSummary";
 import type { MonitoringPlanData, OperationsRunbookData } from "@/lib/scoring/types";
 
 const VALID_SECTIONS = [
@@ -27,7 +29,7 @@ const SECTION_TITLES: Record<(typeof VALID_SECTIONS)[number], string> = {
   monitoring: "Monitoring Plan",
   policies: "Policy Drafts",
   products: "Product Assessments",
-  export: "Export",
+  export: "Download",
 };
 
 export const dynamic = "force-dynamic";
@@ -112,18 +114,21 @@ export default async function OrgResultsPage({
       </div>
 
       {section === "summary" && (
-        <OrgRiskSummary
-          result={{
-            riskTier: result.riskTier as "LOW" | "MEDIUM" | "HIGH" | "REGULATED",
-            riskScore: result.riskScore as number,
-            riskDrivers: result.riskDrivers as Array<{
-              factor: string;
-              contribution?: number;
-              scoreContribution?: number;
-              explanation: string;
-            }>,
-          }}
-        />
+        <div className="space-y-6">
+          <OrgRiskSummary
+            result={{
+              riskTier: result.riskTier as "LOW" | "MEDIUM" | "HIGH" | "REGULATED",
+              riskScore: result.riskScore as number,
+              riskDrivers: result.riskDrivers as Array<{
+                factor: string;
+                contribution?: number;
+                scoreContribution?: number;
+                explanation: string;
+              }>,
+            }}
+          />
+          <DecisionLogSummary decisionLog={result.decisionLog as DecisionLogData | null} scope="org" />
+        </div>
       )}
 
       {section === "heatmap" && (
@@ -219,7 +224,13 @@ export default async function OrgResultsPage({
         />
       )}
 
-      {section === "export" && <ExportPanel assessmentId={id} type="org" />}
+      {section === "export" && (
+        <ExportPanel
+          type="org"
+          exportUrl={`/api/org-assessments/${id}/export`}
+          sections={ORG_DOWNLOAD_SECTIONS}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 import { buildProductContextForAI } from "@/lib/ai/product-context-for-ai";
 import { generateTechnicalControlRecommendations } from "@/lib/ai/generate-technical-control-recommendations";
 
@@ -74,6 +75,14 @@ export async function POST(
     where: { assessmentId: pid },
     data: { technicalControls: updatedControls as object },
   });
+
+  await logAudit({
+    entityType: "ProductAssessment",
+    entityId: pid,
+    action: "add_recommendation",
+    actorId: userId,
+    payload: { controlId: newControl.controlId },
+  }).catch((e) => console.error("[audit] add_recommendation:", e));
 
   revalidatePath(`/org/${id}/product/${pid}/results`);
 

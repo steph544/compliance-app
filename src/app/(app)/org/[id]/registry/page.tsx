@@ -56,7 +56,7 @@ export default async function RegistryPage({
   });
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="w-full px-4 py-10">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>

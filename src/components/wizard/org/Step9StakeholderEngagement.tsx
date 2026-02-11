@@ -81,7 +81,7 @@ export default function Step9StakeholderEngagement() {
         <p className="text-sm text-muted-foreground">
           Stakeholder and impact practices align with NIST GOVERN 4.2, 5.1, 5.2 and inform governance recommendations.
         </p>
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2">
             Impact & Stakeholder Practices
           </h3>
@@ -177,7 +177,7 @@ export default function Step9StakeholderEngagement() {
           )}
         />
 
-        <section className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <section className="w-full min-w-0 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
           <h3 className="text-sm font-semibold text-foreground border-l-2 border-accent-primary pl-2 mb-2">
             Recourse & Principles
           </h3>
